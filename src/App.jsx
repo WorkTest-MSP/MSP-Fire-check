@@ -1,4 +1,10 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+
 import {
   Camera,
   CheckCircle2,
@@ -14,6 +20,8 @@ import {
   X,
   XCircle,
 } from "lucide-react";
+
+import { Html5Qrcode } from "html5-qrcode";
 
 const CHECKLISTS = {
   "Dry Chemical": [
@@ -146,8 +154,8 @@ export default function App() {
   const [cameraActive, setCameraActive] = useState(false);
   const [qrFallback, setQrFallback] = useState("");
 
-  const videoRef = useRef(null);
-  const streamRef = useRef(null);
+  const scannerRef = useRef(null);
+  const scannerRunningRef = useRef(false);
 
   const completed = items.filter(
     (item) => item.lastResult !== "PENDING"
@@ -179,15 +187,31 @@ export default function App() {
     );
   }, [items, search]);
 
-  function stopCamera() {
-    if (streamRef.current) {
-      streamRef.current
-        .getTracks()
-        .forEach((track) => track.stop());
+  async function stopCamera() {
+    const scanner = scannerRef.current;
 
-      streamRef.current = null;
+    if (!scanner) {
+      scannerRunningRef.current = false;
+      setCameraActive(false);
+      return;
     }
 
+    try {
+      if (scannerRunningRef.current) {
+        await scanner.stop();
+      }
+    } catch (error) {
+      console.log("Scanner stop:", error);
+    }
+
+    try {
+      await scanner.clear();
+    } catch (error) {
+      console.log("Scanner clear:", error);
+    }
+
+    scannerRef.current = null;
+    scannerRunningRef.current = false;
     setCameraActive(false);
   }
 
@@ -220,7 +244,10 @@ export default function App() {
       .toUpperCase();
 
     if (code.includes("/")) {
-      code = code.split("/").filter(Boolean).pop();
+      code = code
+        .split("/")
+        .filter(Boolean)
+        .pop();
     }
 
     const item = items.find(
@@ -239,99 +266,77 @@ export default function App() {
   }
 
   async function startCamera() {
-    if (
-      !navigator.mediaDevices ||
-      !navigator.mediaDevices.getUserMedia
-    ) {
-      alert(
-        "Browser นี้ไม่รองรับการเปิดกล้อง กรุณาใช้ช่องกรอกรหัสแทน"
-      );
-
+    if (scannerRunningRef.current) {
       return;
     }
 
     try {
-      const stream =
-        await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: {
-              ideal: "environment",
-            },
+      const scanner = new Html5Qrcode("qr-reader");
+
+      scannerRef.current = scanner;
+      scannerRunningRef.current = true;
+
+      await scanner.start(
+        {
+          facingMode: "environment",
+        },
+        {
+          fps: 10,
+          qrbox: {
+            width: 250,
+            height: 250,
           },
+          aspectRatio: 1.0,
+        },
+        async (decodedText) => {
+          if (!scannerRunningRef.current) {
+            return;
+          }
 
-          audio: false,
-        });
+          scannerRunningRef.current = false;
 
-      streamRef.current = stream;
+          try {
+            await scanner.stop();
+          } catch (error) {
+            console.log("Scanner stop after scan:", error);
+          }
 
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
+          try {
+            await scanner.clear();
+          } catch (error) {
+            console.log("Scanner clear after scan:", error);
+          }
 
-        await videoRef.current.play();
-      }
+          scannerRef.current = null;
+          setCameraActive(false);
+
+          findExtinguisher(decodedText);
+        },
+        () => {
+          // ยังไม่พบ QR ในภาพปัจจุบัน
+          // ให้ Scanner ทำงานต่อ
+        }
+      );
 
       setCameraActive(true);
-
-      startQRDetection();
     } catch (error) {
-      console.error(error);
+      console.error("QR scanner error:", error);
+
+      if (scannerRef.current) {
+        try {
+          await scannerRef.current.clear();
+        } catch {
+          // Ignore cleanup error
+        }
+      }
+
+      scannerRef.current = null;
+      scannerRunningRef.current = false;
+      setCameraActive(false);
 
       alert(
-        "ไม่สามารถเปิดกล้องได้ กรุณาอนุญาต Camera Permission หรือกรอกรหัสถังแทน"
+        "ไม่สามารถเปิด QR Scanner ได้ กรุณาตรวจสอบสิทธิ์กล้อง หรือใช้ช่องกรอกรหัส"
       );
-    }
-  }
-
-  async function startQRDetection() {
-    if (!("BarcodeDetector" in window)) {
-      return;
-    }
-
-    try {
-      const detector =
-        new window.BarcodeDetector({
-          formats: ["qr_code"],
-        });
-
-      const scan = async () => {
-        if (
-          !streamRef.current ||
-          !videoRef.current
-        ) {
-          return;
-        }
-
-        try {
-          const barcodes =
-            await detector.detect(
-              videoRef.current
-            );
-
-          if (
-            barcodes &&
-            barcodes.length > 0
-          ) {
-            const value =
-              barcodes[0].rawValue;
-
-            if (value) {
-              stopCamera();
-
-              findExtinguisher(value);
-
-              return;
-            }
-          }
-        } catch (error) {
-          console.error(error);
-        }
-
-        requestAnimationFrame(scan);
-      };
-
-      requestAnimationFrame(scan);
-    } catch (error) {
-      console.error(error);
     }
   }
 
@@ -350,20 +355,17 @@ export default function App() {
 
     if (!inspector.trim()) {
       alert("กรุณากรอกชื่อผู้ตรวจ");
-
       return;
     }
 
-    const unanswered =
-      answers.some(
-        (answer) => answer === null
-      );
+    const unanswered = answers.some(
+      (answer) => answer === null
+    );
 
     if (unanswered) {
       alert(
         "กรุณาตรวจสอบ Checklist ให้ครบทุกข้อ"
       );
-
       return;
     }
 
@@ -372,13 +374,11 @@ export default function App() {
         ? "NG"
         : "PASS";
 
-    const inspectedAt =
-      new Date().toISOString();
+    const inspectedAt = new Date().toISOString();
 
     const inspection = {
       inspectionId: `INS-${Date.now()}`,
-      extinguisherCode:
-        selected.code,
+      extinguisherCode: selected.code,
       inspector: inspector.trim(),
       inspectedAt,
       result,
@@ -386,17 +386,15 @@ export default function App() {
       note: note.trim(),
     };
 
-    const updatedItems =
-      items.map((item) =>
-        item.code === selected.code
-          ? {
-              ...item,
-              lastResult: result,
-              lastInspection:
-                inspectedAt,
-            }
-          : item
-      );
+    const updatedItems = items.map((item) =>
+      item.code === selected.code
+        ? {
+            ...item,
+            lastResult: result,
+            lastInspection: inspectedAt,
+          }
+        : item
+    );
 
     const updatedLogs = [
       inspection,
@@ -418,8 +416,7 @@ export default function App() {
   }
 
   function resetDemoData() {
-    const freshItems =
-      createExtinguishers();
+    const freshItems = createExtinguishers();
 
     setItems(freshItems);
     setLogs([]);
@@ -427,10 +424,21 @@ export default function App() {
     saveItems(freshItems);
     saveLogs([]);
 
-    alert(
-      "รีเซ็ตข้อมูลทดลองเรียบร้อย"
-    );
+    alert("รีเซ็ตข้อมูลทดลองเรียบร้อย");
   }
+
+  useEffect(() => {
+    return () => {
+      const scanner = scannerRef.current;
+
+      if (
+        scanner &&
+        scannerRunningRef.current
+      ) {
+        scanner.stop().catch(() => {});
+      }
+    };
+  }, []);
 
   return (
     <div className="app">
@@ -481,9 +489,7 @@ export default function App() {
                   className="progress-value"
                   style={{
                     width: `${
-                      (completed /
-                        items.length) *
-                      100
+                      (completed / items.length) * 100
                     }%`,
                   }}
                 />
@@ -496,9 +502,7 @@ export default function App() {
 
                 <span>
                   {Math.round(
-                    (completed /
-                      items.length) *
-                      100
+                    (completed / items.length) * 100
                   )}
                   %
                 </span>
@@ -552,12 +556,12 @@ export default function App() {
 
               <div className="summary-row">
                 <span>PASS</span>
+
                 <strong className="green-text">
                   {
                     items.filter(
                       (item) =>
-                        item.lastResult ===
-                        "PASS"
+                        item.lastResult === "PASS"
                     ).length
                   }
                 </strong>
@@ -565,6 +569,7 @@ export default function App() {
 
               <div className="summary-row">
                 <span>NG</span>
+
                 <strong className="red-text">
                   {ng}
                 </strong>
@@ -572,6 +577,7 @@ export default function App() {
 
               <div className="summary-row">
                 <span>PENDING</span>
+
                 <strong className="yellow-text">
                   {pending}
                 </strong>
@@ -592,15 +598,13 @@ export default function App() {
             <h1>สแกน QR Code</h1>
 
             <p className="page-description">
-              QR Code ใช้รหัส FE-001
-              ถึง FE-070
+              QR Code ใช้รหัส FE-001 ถึง FE-070
             </p>
 
             <div className="camera-box">
-              <video
-                ref={videoRef}
-                muted
-                playsInline
+              <div
+                id="qr-reader"
+                className="qr-reader"
               />
 
               {!cameraActive && (
@@ -612,8 +616,6 @@ export default function App() {
                   </span>
                 </div>
               )}
-
-              <div className="scanner-frame" />
             </div>
 
             {!cameraActive ? (
@@ -645,17 +647,13 @@ export default function App() {
               onSubmit={(event) => {
                 event.preventDefault();
 
-                findExtinguisher(
-                  qrFallback
-                );
+                findExtinguisher(qrFallback);
               }}
             >
               <input
                 value={qrFallback}
                 onChange={(event) =>
-                  setQrFallback(
-                    event.target.value
-                  )
+                  setQrFallback(event.target.value)
                 }
                 placeholder="เช่น FE-001"
               />
@@ -671,8 +669,7 @@ export default function App() {
               </strong>
 
               <p>
-                สามารถกรอกรหัส
-                FE-001 ถึง FE-070
+                สามารถกรอกรหัส FE-001 ถึง FE-070
                 เพื่อทดสอบระบบก่อนได้
               </p>
             </div>
@@ -699,217 +696,179 @@ export default function App() {
               <input
                 value={search}
                 onChange={(event) =>
-                  setSearch(
-                    event.target.value
-                  )
+                  setSearch(event.target.value)
                 }
                 placeholder="ค้นหา FE-001, Area, Location"
               />
             </div>
 
             <div className="item-list">
-              {filteredItems.map(
-                (item) => (
-                  <button
-                    className="extinguisher-card"
-                    key={item.code}
-                    onClick={() =>
-                      openInspection(item)
-                    }
-                  >
-                    <div className="fire-icon">
-                      <Flame
-                        size={22}
-                      />
-                    </div>
+              {filteredItems.map((item) => (
+                <button
+                  className="extinguisher-card"
+                  key={item.code}
+                  onClick={() =>
+                    openInspection(item)
+                  }
+                >
+                  <div className="fire-icon">
+                    <Flame size={22} />
+                  </div>
 
-                    <div className="item-info">
-                      <strong>
-                        {item.code}
-                      </strong>
+                  <div className="item-info">
+                    <strong>
+                      {item.code}
+                    </strong>
 
-                      <span>
-                        {item.type} •{" "}
-                        {item.size}
-                      </span>
+                    <span>
+                      {item.type} • {item.size}
+                    </span>
 
-                      <span>
-                        <MapPin
-                          size={13}
-                        />
-                        {item.area} •{" "}
-                        {item.location}
-                      </span>
-                    </div>
+                    <span>
+                      <MapPin size={13} />
+                      {item.area} • {item.location}
+                    </span>
+                  </div>
 
-                    <StatusBadge
-                      status={
-                        item.lastResult
-                      }
-                    />
-                  </button>
-                )
-              )}
+                  <StatusBadge
+                    status={item.lastResult}
+                  />
+                </button>
+              ))}
             </div>
           </>
         )}
 
-        {page === "inspection" &&
-          selected && (
-            <section className="inspection-page">
-              <button
-                className="back-button"
-                onClick={() =>
-                  setPage("list")
-                }
-              >
-                ← กลับ
-              </button>
+        {page === "inspection" && selected && (
+          <section className="inspection-page">
+            <button
+              className="back-button"
+              onClick={() =>
+                setPage("list")
+              }
+            >
+              ← กลับ
+            </button>
 
-              <div className="equipment-header">
-                <div>
-                  <div className="equipment-code">
-                    {selected.code}
-                  </div>
-
-                  <div>
-                    {selected.type} •{" "}
-                    {selected.size}
-                  </div>
+            <div className="equipment-header">
+              <div>
+                <div className="equipment-code">
+                  {selected.code}
                 </div>
 
-                <Flame size={40} />
+                <div>
+                  {selected.type} • {selected.size}
+                </div>
               </div>
 
-              <div className="location-line">
-                <MapPin size={17} />
+              <Flame size={40} />
+            </div>
 
-                {selected.area}
-                {" / "}
-                {selected.location}
-              </div>
+            <div className="location-line">
+              <MapPin size={17} />
+              {selected.area} / {selected.location}
+            </div>
 
-              <section className="form-card">
-                <label>
-                  ชื่อผู้ตรวจ
-                </label>
+            <section className="form-card">
+              <label>
+                ชื่อผู้ตรวจ
+              </label>
 
-                <input
-                  value={inspector}
-                  onChange={(event) =>
-                    setInspector(
-                      event.target.value
-                    )
-                  }
-                  placeholder="กรอกชื่อผู้ตรวจ"
-                />
-              </section>
-
-              <h2 className="checklist-title">
-                Inspection Checklist
-              </h2>
-
-              <div className="checklist">
-                {CHECKLISTS[
-                  selected.type
-                ].map(
-                  (
-                    question,
-                    index
-                  ) => (
-                    <div
-                      className="check-card"
-                      key={question}
-                    >
-                      <div className="question">
-                        <span>
-                          {index + 1}.
-                        </span>
-
-                        {question}
-                      </div>
-
-                      <div className="answer-buttons">
-                        <button
-                          className={
-                            answers[
-                              index
-                            ] === "PASS"
-                              ? "answer pass selected"
-                              : "answer pass"
-                          }
-                          onClick={() =>
-                            updateAnswer(
-                              index,
-                              "PASS"
-                            )
-                          }
-                        >
-                          <CheckCircle2
-                            size={18}
-                          />
-                          PASS
-                        </button>
-
-                        <button
-                          className={
-                            answers[
-                              index
-                            ] === "NG"
-                              ? "answer ng selected"
-                              : "answer ng"
-                          }
-                          onClick={() =>
-                            updateAnswer(
-                              index,
-                              "NG"
-                            )
-                          }
-                        >
-                          <XCircle
-                            size={18}
-                          />
-                          NG
-                        </button>
-                      </div>
-                    </div>
-                  )
-                )}
-              </div>
-
-              <section className="form-card">
-                <label>
-                  หมายเหตุ
-                </label>
-
-                <textarea
-                  value={note}
-                  onChange={(event) =>
-                    setNote(
-                      event.target.value
-                    )
-                  }
-                  placeholder="รายละเอียดความผิดปกติ หรือหมายเหตุ"
-                />
-              </section>
-
-              <button
-                className="primary-button save-button"
-                onClick={
-                  submitInspection
+              <input
+                value={inspector}
+                onChange={(event) =>
+                  setInspector(event.target.value)
                 }
-              >
-                บันทึกผลการตรวจ
-              </button>
+                placeholder="กรอกชื่อผู้ตรวจ"
+              />
             </section>
-          )}
+
+            <h2 className="checklist-title">
+              Inspection Checklist
+            </h2>
+
+            <div className="checklist">
+              {CHECKLISTS[selected.type].map(
+                (question, index) => (
+                  <div
+                    className="check-card"
+                    key={question}
+                  >
+                    <div className="question">
+                      <span>
+                        {index + 1}.
+                      </span>
+
+                      {question}
+                    </div>
+
+                    <div className="answer-buttons">
+                      <button
+                        className={
+                          answers[index] === "PASS"
+                            ? "answer pass selected"
+                            : "answer pass"
+                        }
+                        onClick={() =>
+                          updateAnswer(
+                            index,
+                            "PASS"
+                          )
+                        }
+                      >
+                        <CheckCircle2 size={18} />
+                        PASS
+                      </button>
+
+                      <button
+                        className={
+                          answers[index] === "NG"
+                            ? "answer ng selected"
+                            : "answer ng"
+                        }
+                        onClick={() =>
+                          updateAnswer(
+                            index,
+                            "NG"
+                          )
+                        }
+                      >
+                        <XCircle size={18} />
+                        NG
+                      </button>
+                    </div>
+                  </div>
+                )
+              )}
+            </div>
+
+            <section className="form-card">
+              <label>
+                หมายเหตุ
+              </label>
+
+              <textarea
+                value={note}
+                onChange={(event) =>
+                  setNote(event.target.value)
+                }
+                placeholder="รายละเอียดความผิดปกติ หรือหมายเหตุ"
+              />
+            </section>
+
+            <button
+              className="primary-button save-button"
+              onClick={submitInspection}
+            >
+              บันทึกผลการตรวจ
+            </button>
+          </section>
+        )}
 
         {page === "success" && (
           <section className="success-page">
             <div className="success-icon">
-              <CheckCircle2
-                size={58}
-              />
+              <CheckCircle2 size={58} />
             </div>
 
             <h1>
@@ -950,8 +909,7 @@ export default function App() {
                 </h1>
 
                 <p>
-                  ข้อมูล Demo
-                  จาก Browser นี้
+                  ข้อมูล Demo จาก Browser นี้
                 </p>
               </div>
             </div>
@@ -973,20 +931,16 @@ export default function App() {
                 {logs.map((log) => (
                   <div
                     className="history-card"
-                    key={
-                      log.inspectionId
-                    }
+                    key={log.inspectionId}
                   >
                     <div
                       className={
-                        log.result ===
-                        "PASS"
+                        log.result === "PASS"
                           ? "history-status pass"
                           : "history-status ng"
                       }
                     >
-                      {log.result ===
-                      "PASS" ? (
+                      {log.result === "PASS" ? (
                         <CheckCircle2 />
                       ) : (
                         <TriangleAlert />
@@ -996,29 +950,22 @@ export default function App() {
                     <div className="history-info">
                       <div className="history-header">
                         <strong>
-                          {
-                            log.extinguisherCode
-                          }
+                          {log.extinguisherCode}
                         </strong>
 
                         <StatusBadge
-                          status={
-                            log.result
-                          }
+                          status={log.result}
                         />
                       </div>
 
                       <div>
-                        ผู้ตรวจ:{" "}
-                        {log.inspector}
+                        ผู้ตรวจ: {log.inspector}
                       </div>
 
                       <div>
                         {new Date(
                           log.inspectedAt
-                        ).toLocaleString(
-                          "th-TH"
-                        )}
+                        ).toLocaleString("th-TH")}
                       </div>
 
                       {log.note && (
@@ -1035,9 +982,7 @@ export default function App() {
         )}
       </main>
 
-      {!["inspection", "success"].includes(
-        page
-      ) && (
+      {!["inspection", "success"].includes(page) && (
         <nav className="bottom-nav">
           <button
             className={
