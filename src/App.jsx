@@ -22,6 +22,8 @@ import {
 } from "lucide-react";
 
 import { Html5Qrcode } from "html5-qrcode";
+const API_URL =
+  "https://script.google.com/macros/s/AKfycbwPX70IpwywzumgNqCw75Ha2tF7Pw-gvX7uDebL4_AaIt00InrBt7ehgKRFyOwogAE/exec";
 
 const CHECKLISTS = {
   "Dry Chemical": [
@@ -49,67 +51,6 @@ const CHECKLISTS = {
   ],
 };
 
-function createExtinguishers() {
-  return Array.from({ length: 70 }, (_, index) => {
-    const number = index + 1;
-
-    return {
-      code: `FE-${String(number).padStart(3, "0")}`,
-      type: number % 10 === 0 ? "CO2" : "Dry Chemical",
-      size: number % 10 === 0 ? "10 kg" : "10 lb",
-      area: [
-        "Packing",
-        "Warehouse",
-        "Office",
-        "Production",
-        "Loading Bay",
-      ][index % 5],
-      location: `จุดติดตั้ง ${String(number).padStart(2, "0")}`,
-      status: "ACTIVE",
-      lastResult: "PENDING",
-      lastInspection: null,
-    };
-  });
-}
-
-function loadItems() {
-  try {
-    const stored = localStorage.getItem("firecheck70_items");
-
-    if (stored) {
-      return JSON.parse(stored);
-    }
-  } catch (error) {
-    console.error("Cannot read extinguisher data:", error);
-  }
-
-  return createExtinguishers();
-}
-
-function loadLogs() {
-  try {
-    return JSON.parse(
-      localStorage.getItem("firecheck70_logs") || "[]"
-    );
-  } catch {
-    return [];
-  }
-}
-
-function saveItems(items) {
-  localStorage.setItem(
-    "firecheck70_items",
-    JSON.stringify(items)
-  );
-}
-
-function saveLogs(logs) {
-  localStorage.setItem(
-    "firecheck70_logs",
-    JSON.stringify(logs)
-  );
-}
-
 function StatusBadge({ status }) {
   const css =
     status === "PASS"
@@ -136,8 +77,13 @@ function StatCard({ title, value, type, icon: Icon }) {
 }
 
 export default function App() {
-  const [items, setItems] = useState(loadItems);
-  const [logs, setLogs] = useState(loadLogs);
+  const [items, setItems] = useState([]);
+const [logs, setLogs] = useState([]);
+
+const [loading, setLoading] = useState(true);
+const [syncMessage, setSyncMessage] = useState(
+  "กำลังโหลดข้อมูล..."
+);
 
   const [page, setPage] = useState("home");
   const [search, setSearch] = useState("");
@@ -186,7 +132,145 @@ export default function App() {
         .includes(text)
     );
   }, [items, search]);
+  
+function mapExtinguisher(row) {
+  return {
+    code: String(row.Code || "")
+      .trim()
+      .toUpperCase(),
 
+    type:
+      row.Type || "Dry Chemical",
+
+    size:
+      row.Size || "",
+
+    area:
+      row.Area || "",
+
+    location:
+      row.Location || "",
+
+    status:
+      row.Status || "ACTIVE",
+
+    lastResult:
+      row.LastResult || "PENDING",
+
+    lastInspection:
+      row.LastInspection || null,
+  };
+}
+
+  function mapInspection(row) {
+  let checklist = [];
+
+  try {
+    checklist = row.ChecklistJSON
+      ? JSON.parse(row.ChecklistJSON)
+      : [];
+  } catch {
+    checklist = [];
+  }
+
+  return {
+    inspectionId:
+      row.InspectionID || "",
+
+    extinguisherCode:
+      row.ExtinguisherCode || "",
+
+    inspectedAt:
+      row.InspectedAt || "",
+
+    inspector:
+      row.Inspector || "",
+
+    result:
+      row.Result || "",
+
+    checklist,
+
+    note:
+      row.Note || "",
+  };
+}
+
+async function loadOnlineData() {
+  setLoading(true);
+  setSyncMessage("กำลังโหลดข้อมูลออนไลน์...");
+
+  try {
+    const masterUrl =
+      `${API_URL}?action=extinguishers`;
+
+    const historyUrl =
+      `${API_URL}?action=inspections`;
+
+    const responses = await Promise.all([
+      fetch(masterUrl, {
+        cache: "no-store",
+      }),
+
+      fetch(historyUrl, {
+        cache: "no-store",
+      }),
+    ]);
+
+    const masterResponse =
+      await responses[0].json();
+
+    const historyResponse =
+      await responses[1].json();
+
+    if (!masterResponse.success) {
+      throw new Error(
+        masterResponse.message ||
+        "Cannot load extinguishers"
+      );
+    }
+
+    if (!historyResponse.success) {
+      throw new Error(
+        historyResponse.message ||
+        "Cannot load inspections"
+      );
+    }
+
+    const onlineItems =
+      masterResponse.data
+        .map(mapExtinguisher)
+        .filter((item) => item.code);
+
+    const onlineLogs =
+      historyResponse.data
+        .map(mapInspection);
+
+    setItems(onlineItems);
+    setLogs(onlineLogs);
+
+    setSyncMessage(
+      `เชื่อมต่อฐานข้อมูลแล้ว ${onlineItems.length} จุด`
+    );
+  } catch (error) {
+    console.error(
+      "Load online data error:",
+      error
+    );
+
+    setSyncMessage(
+      "โหลดข้อมูลออนไลน์ไม่สำเร็จ"
+    );
+
+    alert(
+      "ไม่สามารถโหลดข้อมูลจาก Google Sheets ได้ กรุณาตรวจสอบอินเทอร์เน็ตและ Apps Script API"
+    );
+  } finally {
+    setLoading(false);
+  }
+}
+
+  
   async function stopCamera() {
     const scanner = scannerRef.current;
 
@@ -348,84 +432,122 @@ export default function App() {
     );
   }
 
-  function submitInspection() {
-    if (!selected) {
-      return;
-    }
+  async function submitInspection() {
+  if (!selected) {
+    return;
+  }
 
-    if (!inspector.trim()) {
-      alert("กรุณากรอกชื่อผู้ตรวจ");
-      return;
-    }
+  if (!inspector.trim()) {
+    alert("กรุณากรอกชื่อผู้ตรวจ");
+    return;
+  }
 
-    const unanswered = answers.some(
-      (answer) => answer === null
+  const unanswered = answers.some(
+    (answer) => answer === null
+  );
+
+  if (unanswered) {
+    alert(
+      "กรุณาตรวจสอบ Checklist ให้ครบทุกข้อ"
+    );
+    return;
+  }
+
+  const result =
+    answers.includes("NG")
+      ? "NG"
+      : "PASS";
+
+  const inspectionId =
+    `INS-${Date.now()}`;
+
+  const payload = {
+    action: "saveInspection",
+
+    inspectionId,
+
+    extinguisherCode:
+      selected.code,
+
+    inspector:
+      inspector.trim(),
+
+    result,
+
+    checklist:
+      answers,
+
+    note:
+      note.trim(),
+  };
+
+  setSyncMessage(
+    "กำลังบันทึกผลการตรวจ..."
+  );
+
+  try {
+    const response = await fetch(
+      API_URL,
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type":
+            "text/plain;charset=utf-8",
+        },
+
+        body:
+          JSON.stringify(payload),
+      }
     );
 
-    if (unanswered) {
-      alert(
-        "กรุณาตรวจสอบ Checklist ให้ครบทุกข้อ"
+    if (!response.ok) {
+      throw new Error(
+        `HTTP error: ${response.status}`
       );
-      return;
     }
 
-    const result =
-      answers.includes("NG")
-        ? "NG"
-        : "PASS";
+    const resultData =
+      await response.json();
 
-    const inspectedAt = new Date().toISOString();
-
-    const inspection = {
-      inspectionId: `INS-${Date.now()}`,
-      extinguisherCode: selected.code,
-      inspector: inspector.trim(),
-      inspectedAt,
-      result,
-      checklist: answers,
-      note: note.trim(),
-    };
-
-    const updatedItems = items.map((item) =>
-      item.code === selected.code
-        ? {
-            ...item,
-            lastResult: result,
-            lastInspection: inspectedAt,
-          }
-        : item
-    );
-
-    const updatedLogs = [
-      inspection,
-      ...logs,
-    ];
-
-    setItems(updatedItems);
-    setLogs(updatedLogs);
-
-    saveItems(updatedItems);
-    saveLogs(updatedLogs);
+    if (!resultData.success) {
+      throw new Error(
+        resultData.message ||
+        "Save inspection failed"
+      );
+    }
 
     localStorage.setItem(
       "firecheck70_inspector",
       inspector.trim()
     );
 
+    setSyncMessage(
+      "บันทึกข้อมูลออนไลน์เรียบร้อย"
+    );
+
+    await loadOnlineData();
+
     setPage("success");
+  } catch (error) {
+    console.error(
+      "Save inspection error:",
+      error
+    );
+
+    setSyncMessage(
+      "บันทึกข้อมูลไม่สำเร็จ"
+    );
+
+    alert(
+      "ไม่สามารถบันทึกผลลง Google Sheets ได้ กรุณาตรวจสอบอินเทอร์เน็ตและ Apps Script API"
+    );
   }
-
-  function resetDemoData() {
-    const freshItems = createExtinguishers();
-
-    setItems(freshItems);
-    setLogs([]);
-
-    saveItems(freshItems);
-    saveLogs([]);
-
-    alert("รีเซ็ตข้อมูลทดลองเรียบร้อย");
-  }
+}
+  
+useEffect(() => {
+  loadOnlineData();
+}, []);
 
   useEffect(() => {
     return () => {
@@ -461,7 +583,7 @@ export default function App() {
           </div>
 
           <div className="demo-label">
-            DEMO
+             {loading ? "LOADING" : "ONLINE"}
           </div>
         </div>
       </header>
@@ -469,44 +591,58 @@ export default function App() {
       <main className="main">
         {page === "home" && (
           <>
+            <div
+      style={{
+        marginBottom: "12px",
+        fontSize: "12px",
+        color: "#64748b",
+        textAlign: "center",
+      }}
+    >
+      {syncMessage}
+    </div>
             <section className="hero">
               <div className="hero-label">
                 FIRE EXTINGUISHER INSPECTION
               </div>
 
               <h1>
-                ตรวจถังดับเพลิง
-                <br />
-                70 จุด
-              </h1>
+  ตรวจถังดับเพลิง
+  <br />
+  {items.length} จุด
+</h1>
 
               <p>
                 QR Inspection System
               </p>
 
               <div className="progress">
-                <div
-                  className="progress-value"
-                  style={{
-                    width: `${
-                      (completed / items.length) * 100
-                    }%`,
-                  }}
-                />
-              </div>
+  <div
+    className="progress-value"
+    style={{
+      width: `${
+        items.length > 0
+          ? (completed / items.length) * 100
+          : 0
+      }%`,
+    }}
+  />
+</div>
 
-              <div className="hero-summary">
-                <span>
-                  ตรวจแล้ว {completed} จุด
-                </span>
+<div className="hero-summary">
+  <span>
+    ตรวจแล้ว {completed} จุด
+  </span>
 
-                <span>
-                  {Math.round(
-                    (completed / items.length) * 100
-                  )}
-                  %
-                </span>
-              </div>
+  <span>
+    {items.length > 0
+      ? Math.round(
+          (completed / items.length) * 100
+        )
+      : 0}
+    %
+  </span>
+</div>
             </section>
 
             <section className="stats-grid">
@@ -583,13 +719,7 @@ export default function App() {
                 </strong>
               </div>
             </section>
-
-            <button
-              className="text-button"
-              onClick={resetDemoData}
-            >
-              Reset Demo Data
-            </button>
+            
           </>
         )}
 
@@ -598,8 +728,9 @@ export default function App() {
             <h1>สแกน QR Code</h1>
 
             <p className="page-description">
-              QR Code ใช้รหัส FE-001 ถึง FE-070
-            </p>
+  สแกน QR Code ตามรหัสในทะเบียนถังดับเพลิง
+</p>
+
 
             <div className="camera-box">
               <div
@@ -669,9 +800,9 @@ export default function App() {
               </strong>
 
               <p>
-                สามารถกรอกรหัส FE-001 ถึง FE-070
-                เพื่อทดสอบระบบก่อนได้
-              </p>
+  สามารถกรอกรหัสถัง เช่น FE-001
+  เพื่อค้นหาจากทะเบียนออนไลน์ได้
+</p>
             </div>
           </section>
         )}
@@ -909,7 +1040,7 @@ export default function App() {
                 </h1>
 
                 <p>
-                  ข้อมูล Demo จาก Browser นี้
+                  ประวัติการตรวจจากฐานข้อมูล
                 </p>
               </div>
             </div>
@@ -1023,7 +1154,7 @@ export default function App() {
             }
           >
             <Search size={21} />
-            <span>70 จุด</span>
+            <span>ทะเบียน</span>
           </button>
 
           <button
