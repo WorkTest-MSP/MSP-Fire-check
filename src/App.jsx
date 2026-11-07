@@ -325,49 +325,60 @@ async function loadOnlineData() {
   }
 
   function openInspection(item) {
-    stopCamera();
+  stopCamera();
 
-    setSelected(item);
-
-    setAnswers(
-      CHECKLISTS[item.type].map(() => null)
-    );
-
-    setNote("");
-
-    setPage("inspection");
+  if (!item) {
+    alert("ไม่พบข้อมูลถังดับเพลิง");
+    return;
   }
+
+  const checklist =
+    CHECKLISTS[item.type];
+
+  if (!checklist) {
+    alert(
+      `พบรหัส ${item.code} แต่ไม่พบ Checklist สำหรับ Type: ${item.type || "ไม่มีข้อมูล"}`
+    );
+    return;
+  }
+
+  setSelected(item);
+
+  setAnswers(
+    checklist.map(() => null)
+  );
+
+  setNote("");
+
+  setPage("inspection");
+}
 
   function findExtinguisher(value) {
-    if (!value) {
-      return;
-    }
-
-    let code = String(value)
-      .trim()
-      .toUpperCase();
-
-    if (code.includes("/")) {
-      code = code
-        .split("/")
-        .filter(Boolean)
-        .pop();
-    }
-
-    const item = items.find(
-      (row) => row.code === code
-    );
-
-    if (!item) {
-      alert(
-        `ไม่พบรหัส ${code} ในทะเบียนถังดับเพลิง`
-      );
-
-      return;
-    }
-
-    openInspection(item);
+  if (!value) {
+    alert("ไม่พบข้อมูลจาก QR Code");
+    return;
   }
+
+  const code = String(value)
+    .trim()
+    .toUpperCase();
+
+  const item = items.find(
+    (row) =>
+      String(row.code || "")
+        .trim()
+        .toUpperCase() === code
+  );
+
+  if (!item) {
+    alert(
+      `ไม่พบรหัส ${code} ในทะเบียนถังดับเพลิง`
+    );
+    return;
+  }
+
+  openInspection(item);
+}
 
   async function startCamera() {
     if (scannerRunningRef.current) {
