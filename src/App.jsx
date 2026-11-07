@@ -142,38 +142,63 @@ function mapExtinguisher(row) {
     .trim()
     .toUpperCase();
 
+  const rawType = String(
+    row.Type ??
+    row.type ??
+    ""
+  ).trim();
+
+  let type = rawType;
+
+  if (
+    rawType.toUpperCase() ===
+    "DRY CHEMICAL"
+  ) {
+    type = "Dry Chemical";
+  }
+
+  if (
+    rawType.toUpperCase() === "CO2"
+  ) {
+    type = "CO2";
+  }
+
   return {
     code,
 
-    type:
-      row.Type ??
-      row.type ??
-      "Dry Chemical",
+    type,
 
-    size:
+    size: String(
       row.Size ??
       row.size ??
-      "",
+      ""
+    ).trim(),
 
-    area:
+    area: String(
       row.Area ??
       row.area ??
-      "",
+      ""
+    ).trim(),
 
-    location:
+    location: String(
       row.Location ??
       row.location ??
-      "",
+      ""
+    ).trim(),
 
-    status:
+    status: String(
       row.Status ??
       row.status ??
-      "ACTIVE",
+      "ACTIVE"
+    ).trim(),
 
-    lastResult:
+    lastResult: String(
       row.LastResult ??
       row.lastResult ??
-      "PENDING",
+      "PENDING"
+    )
+      .trim()
+      .toUpperCase(),
 
     lastInspection:
       row.LastInspection ??
@@ -337,7 +362,7 @@ async function loadOnlineData() {
 
   if (!checklist) {
     alert(
-      `พบรหัส ${item.code} แต่ไม่พบ Checklist สำหรับ Type: ${item.type || "ไม่มีข้อมูล"}`
+      `พบรหัส ${item.code} แต่ไม่พบ Checklist สำหรับ Type: [${item.type || "ไม่มีข้อมูล"}]`
     );
     return;
   }
