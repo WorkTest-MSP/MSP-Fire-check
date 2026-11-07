@@ -134,31 +134,51 @@ const [syncMessage, setSyncMessage] = useState(
   }, [items, search]);
   
 function mapExtinguisher(row) {
+  const code = String(
+    row.Code ??
+    row.code ??
+    ""
+  )
+    .trim()
+    .toUpperCase();
+
   return {
-    code: String(row.Code || "")
-      .trim()
-      .toUpperCase(),
+    code,
 
     type:
-      row.Type || "Dry Chemical",
+      row.Type ??
+      row.type ??
+      "Dry Chemical",
 
     size:
-      row.Size || "",
+      row.Size ??
+      row.size ??
+      "",
 
     area:
-      row.Area || "",
+      row.Area ??
+      row.area ??
+      "",
 
     location:
-      row.Location || "",
+      row.Location ??
+      row.location ??
+      "",
 
     status:
-      row.Status || "ACTIVE",
+      row.Status ??
+      row.status ??
+      "ACTIVE",
 
     lastResult:
-      row.LastResult || "PENDING",
+      row.LastResult ??
+      row.lastResult ??
+      "PENDING",
 
     lastInspection:
-      row.LastInspection || null,
+      row.LastInspection ??
+      row.lastInspection ??
+      null,
   };
 }
 
