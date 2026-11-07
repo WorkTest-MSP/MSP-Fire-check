@@ -842,7 +842,7 @@ useEffect(() => {
                 onChange={(event) =>
                   setQrFallback(event.target.value)
                 }
-                placeholder="เช่น FE-001"
+                placeholder="เช่น FEG-1"
               />
 
               <button type="submit">
@@ -856,7 +856,7 @@ useEffect(() => {
               </strong>
 
               <p>
-  สามารถกรอกรหัสถัง เช่น FE-001
+  สามารถกรอกรหัสถัง เช่น FEG-1
   เพื่อค้นหาจากทะเบียนออนไลน์ได้
 </p>
             </div>
