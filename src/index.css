@@ -803,15 +803,40 @@ textarea:focus {
 }
 
 .form-card input,
-.form-card textarea {
+.form-card textarea,
+.form-card select {
   width: 100%;
 
   padding: 12px 13px;
 
   border: 1px solid #cbd5e1;
   border-radius: 10px;
-
+  
+  color : #0f172a;
   background: white;
+}
+
+.form-card input:disabled {
+  color: #64748b;
+  background: #f1f5f9;
+}
+
+.field-help {
+  margin: 8px 0 0;
+
+  font-size: 11px;
+  line-height: 1.5;
+
+  color: #64748b;
+}
+
+.master-form-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+
+  gap: 10px;
+
+  margin-top: 18px;
 }
 
 .form-card textarea {
