@@ -851,7 +851,6 @@ useEffect(() => {
                 QR Inspection System
               </p>
 
-              <div className="progress">
   <div className="progress">
   <div
     className="progress-value"
@@ -870,7 +869,7 @@ useEffect(() => {
     {weeklyCompletion}%
   </span>
 </div>
-            </section>
+              </section>
 
             <section className="stats-grid">
               <StatCard
