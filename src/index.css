@@ -1254,3 +1254,64 @@ textarea:focus {
     transform: rotate(360deg);
   }
 }
+
+.danger-zone {
+  margin-top: 28px;
+  padding: 16px;
+
+  border: 1px solid #fecaca;
+  border-radius: 16px;
+
+  background: #fff7f7;
+}
+
+.danger-zone-title {
+  margin-bottom: 6px;
+
+  font-size: 14px;
+  font-weight: 800;
+
+  color: #991b1b;
+}
+
+.danger-zone p {
+  margin: 0 0 14px;
+
+  font-size: 11px;
+  line-height: 1.5;
+
+  color: #64748b;
+}
+
+.deactivate-button,
+.delete-master-button {
+  width: 100%;
+
+  padding: 12px;
+
+  border-radius: 11px;
+
+  font-weight: 700;
+}
+
+.deactivate-button {
+  margin-bottom: 9px;
+
+  border: 1px solid #f59e0b;
+
+  color: #92400e;
+  background: #fffbeb;
+}
+
+.delete-master-button {
+  border: 1px solid #dc2626;
+
+  color: #dc2626;
+  background: white;
+}
+
+.delete-master-button:disabled,
+.deactivate-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
