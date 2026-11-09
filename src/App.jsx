@@ -117,23 +117,15 @@ function StatCard({ title, value, type, icon: Icon }) {
 
 export default function App() {
   const [items, setItems] = useState([]);
-const [logs, setLogs] = useState([]);
-
-const [loading, setLoading] = useState(true);
-const [saving, setSaving] = useState(false);
-const [syncMessage, setSyncMessage] = useState(
-  "กำลังโหลดข้อมูล..."
-);
-
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [syncMessage, setSyncMessage] = useState ("กำลังโหลดข้อมูล...");
   const [page, setPage] = useState("home");
   const [search, setSearch] = useState("");
-
   const [selected, setSelected] = useState(null);
-  const [masterMode, setMasterMode] =
-  useState("add");
-
-const [masterForm, setMasterForm] =
-  useState({
+  const [masterMode, setMasterMode] = useState("add");
+  const [masterForm, setMasterForm] = useState ({
     code: "",
     type: "Dry Chemical",
     size: "",
@@ -144,27 +136,20 @@ const [masterForm, setMasterForm] =
     replacementStatus: "NONE",
   });
   const [answers, setAnswers] = useState([]);
-
   const [inspector, setInspector] = useState(
     localStorage.getItem("firecheck70_inspector") || ""
   );
-
   const [note, setNote] = useState("");
-
   const [cameraActive, setCameraActive] = useState(false);
   const [qrFallback, setQrFallback] = useState("");
-
+  const [expiryFilter, setExpiryFilter] = useState("ALL");
   const scannerRef = useRef(null);
   const scannerRunningRef = useRef(false);
-
+  
   const completed = items.filter(
-    (item) => item.lastResult !== "PENDING"
-  ).length;
-
+    (item) => item.lastResult !== "PENDING").length;
   const ng = items.filter(
-    (item) => item.lastResult === "NG"
-  ).length;
-
+    (item) => item.lastResult === "NG").length;
   const pending = items.length - completed;
   const expiringSoon = items.filter(
   (item) => {
@@ -220,6 +205,83 @@ const verification =
       "Verification"
   ).length;
 
+const expiryItems =
+  items.filter((item) => {
+    const info =
+      getExpiryInfo(
+        item.expiryDate
+      );
+
+    return (
+      info.status === "EXPIRING" ||
+      info.status === "EXPIRED" ||
+      (
+        item.replacementStatus &&
+        item.replacementStatus !==
+          "NONE"
+      )
+    );
+  });
+
+const filteredExpiryItems =
+  expiryItems.filter((item) => {
+    const info =
+      getExpiryInfo(
+        item.expiryDate
+      );
+
+    if (
+      expiryFilter === "ALL"
+    ) {
+      return true;
+    }
+
+    if (
+      expiryFilter ===
+      "EXPIRING"
+    ) {
+      return (
+        info.status ===
+        "EXPIRING"
+      );
+    }
+
+    if (
+      expiryFilter ===
+      "EXPIRED"
+    ) {
+      return (
+        info.status ===
+        "EXPIRED"
+      );
+    }
+
+    if (
+      expiryFilter ===
+      "IN PROGRESS"
+    ) {
+      return [
+        "Request Replacement",
+        "Procurement",
+        "Replacement",
+        "Verification",
+      ].includes(
+        item.replacementStatus
+      );
+    }
+
+    if (
+      expiryFilter ===
+      "COMPLETED"
+    ) {
+      return (
+        item.replacementStatus ===
+        "Completed"
+      );
+    }
+
+    return true;
+  });
   
 const weekStart =
   getWeekStart();
@@ -889,6 +951,84 @@ function openAddMaster() {
     setSaving(false);
   }
 }
+
+async function changeReplacementStatus(
+  item,
+  newStatus
+) {
+  if (!item) {
+    return;
+  }
+
+  setSaving(true);
+
+  setSyncMessage(
+    `กำลัง Update ${item.code}...`
+  );
+
+  try {
+    const response =
+      await fetch(
+        API_URL,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "text/plain;charset=utf-8",
+          },
+
+          body:
+            JSON.stringify({
+              action:
+                "updateReplacementStatus",
+
+              code:
+                item.code,
+
+              replacementStatus:
+                newStatus,
+            }),
+        }
+      );
+
+    if (!response.ok) {
+      throw new Error(
+        `HTTP error: ${response.status}`
+      );
+    }
+
+    const data =
+      await response.json();
+
+    if (!data.success) {
+      throw new Error(
+        data.message ||
+        "Status update failed"
+      );
+    }
+
+    await loadOnlineData();
+
+    setSyncMessage(
+      `${item.code} → ${newStatus}`
+    );
+
+  } catch (error) {
+    console.error(
+      "Replacement status error:",
+      error
+    );
+
+    alert(
+      error.message ||
+      "ไม่สามารถ Update Replacement Status ได้"
+    );
+
+  } finally {
+    setSaving(false);
+  }
+}
   
 async function deleteMaster(
   item
@@ -1371,6 +1511,14 @@ useEffect(() => {
   <div className="panel-title">
     Expiry & Replacement Monitoring
   </div>
+  <button
+  className="expiry-open-button"
+  onClick={() =>
+    setPage("expiry")
+  }
+>
+  เปิดรายการ Expiry Monitoring
+</button>
 
   <div className="summary-row">
     <span>Expiring within 120 days</span>
@@ -1628,6 +1776,230 @@ useEffect(() => {
             </div>
           </>
         )}
+
+        {page === "expiry" && (
+  <section className="inspection-page">
+
+    <button
+      className="back-button"
+      onClick={() =>
+        setPage("home")
+      }
+    >
+      ← กลับ Dashboard
+    </button>
+
+    <div className="page-heading">
+      <div>
+        <h1>
+          Expiry Monitoring
+        </h1>
+
+        <p>
+          ถังใกล้หมดอายุ
+          และ Replacement Workflow
+        </p>
+      </div>
+    </div>
+
+
+    <div className="expiry-filter">
+      {[
+        "ALL",
+        "EXPIRING",
+        "EXPIRED",
+        "IN PROGRESS",
+        "COMPLETED",
+      ].map((filter) => (
+        <button
+          key={filter}
+          className={
+            expiryFilter === filter
+              ? "expiry-filter-active"
+              : ""
+          }
+          onClick={() =>
+            setExpiryFilter(filter)
+          }
+        >
+          {filter}
+        </button>
+      ))}
+    </div>
+
+
+    <div className="expiry-list">
+      {filteredExpiryItems.length ===
+      0 ? (
+        <div className="empty-state">
+          <CheckCircle2 size={42} />
+
+          <strong>
+            ไม่มีรายการ
+          </strong>
+
+          <span>
+            ไม่พบถังตามตัวกรองนี้
+          </span>
+        </div>
+      ) : (
+        filteredExpiryItems.map(
+          (item) => {
+            const info =
+              getExpiryInfo(
+                item.expiryDate
+              );
+
+            return (
+              <div
+                className="expiry-card"
+                key={item.code}
+              >
+                <div className="expiry-card-header">
+                  <div>
+                    <strong>
+                      {item.code}
+                    </strong>
+
+                    <span>
+                      {item.type}
+                    </span>
+                  </div>
+
+                  <StatusBadge
+                    status={
+                      item.lastResult
+                    }
+                  />
+                </div>
+
+
+                <div className="expiry-detail">
+                  <span>
+                    Location
+                  </span>
+
+                  <strong>
+                    {item.location ||
+                      "-"}
+                  </strong>
+                </div>
+
+
+                <div className="expiry-detail">
+                  <span>
+                    Expiry Date
+                  </span>
+
+                  <strong>
+                    {item.expiryDate
+                      ? new Date(
+                          item.expiryDate
+                        ).toLocaleDateString(
+                          "en-GB"
+                        )
+                      : "-"}
+                  </strong>
+                </div>
+
+
+                <div className="expiry-detail">
+                  <span>
+                    Remaining
+                  </span>
+
+                  <strong
+                    className={
+                      info.status ===
+                      "EXPIRED"
+                        ? "red-text"
+                        : "yellow-text"
+                    }
+                  >
+                    {info.status ===
+                    "EXPIRED"
+                      ? `Expired ${Math.abs(
+                          info.days
+                        )} days`
+                      : `${info.days} days`}
+                  </strong>
+                </div>
+
+
+                <div className="expiry-detail">
+                  <span>
+                    Replacement
+                  </span>
+
+                  <strong>
+                    {item.replacementStatus ||
+                      "NONE"}
+                  </strong>
+                </div>
+
+
+                <label className="expiry-action-label">
+                  Update Status
+                </label>
+
+                <select
+                  className="expiry-status-select"
+                  value={
+                    item.replacementStatus ||
+                    "NONE"
+                  }
+                  disabled={saving}
+                  onChange={(event) =>
+                    changeReplacementStatus(
+                      item,
+                      event.target.value
+                    )
+                  }
+                >
+                  <option value="NONE">
+                    NONE
+                  </option>
+
+                  <option value="Request Replacement">
+                    Request Replacement
+                  </option>
+
+                  <option value="Procurement">
+                    Procurement
+                  </option>
+
+                  <option value="Replacement">
+                    Replacement
+                  </option>
+
+                  <option value="Verification">
+                    Verification
+                  </option>
+
+                  <option value="Completed">
+                    Completed
+                  </option>
+                </select>
+
+
+                <button
+                  className="edit-master-button"
+                  onClick={() =>
+                    openEditMaster(item)
+                  }
+                  disabled={saving}
+                >
+                  เปิด Master
+                </button>
+              </div>
+            );
+          }
+        )
+      )}
+    </div>
+
+  </section>
+)}
 
 {page === "masterForm" && (
   <section className="inspection-page">
