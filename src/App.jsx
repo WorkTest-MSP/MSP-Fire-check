@@ -176,6 +176,35 @@ const expired = items.filter(
     );
   }
 ).length;
+
+const requestReplacement =
+  items.filter(
+    (item) =>
+      item.replacementStatus ===
+      "Request Replacement"
+  ).length;
+
+const procurement =
+  items.filter(
+    (item) =>
+      item.replacementStatus ===
+      "Procurement"
+  ).length;
+
+const replacement =
+  items.filter(
+    (item) =>
+      item.replacementStatus ===
+      "Replacement"
+  ).length;
+
+const verification =
+  items.filter(
+    (item) =>
+      item.replacementStatus ===
+      "Verification"
+  ).length;
+
   
 const weekStart =
   getWeekStart();
@@ -899,8 +928,56 @@ useEffect(() => {
   type="red"
   icon={TriangleAlert}
 />
-            </section>
+  </section>
+<div className="panel">
+  <div className="panel-title">
+    Expiry & Replacement Monitoring
+  </div>
 
+  <div className="summary-row">
+    <span>Expiring within 120 days</span>
+    <strong className="yellow-text">
+      {expiringSoon}
+    </strong>
+  </div>
+
+  <div className="summary-row">
+    <span>Expired</span>
+    <strong className="red-text">
+      {expired}
+    </strong>
+  </div>
+
+  <div className="summary-row">
+    <span>Request Replacement</span>
+    <strong>
+      {requestReplacement}
+    </strong>
+  </div>
+
+  <div className="summary-row">
+    <span>Procurement</span>
+    <strong>
+      {procurement}
+    </strong>
+  </div>
+
+  <div className="summary-row">
+    <span>Replacement</span>
+    <strong>
+      {replacement}
+    </strong>
+  </div>
+
+  <div className="summary-row">
+    <span>Verification</span>
+    <strong>
+      {verification}
+    </strong>
+  </div>
+</div>
+
+            
             <button
               className="primary-button scan-main"
               onClick={() =>
