@@ -52,7 +52,7 @@ const CHECKLISTS = {
 };
 // Map extinguisher type to checklist group
 const TYPE_TO_CHECKLIST = {
-  "Dry chemical": "STANDARD",
+  "DRY CHEMICAL": "STANDARD",
   "SC-AFFF+": "STANDARD",
   "F-500": "STANDARD",
   "CO2": "CO2",
