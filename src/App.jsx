@@ -26,7 +26,7 @@ const API_URL =
   "https://script.google.com/macros/s/AKfycbwPX70IpwywzumgNqCw75Ha2tF7Pw-gvX7uDebL4_AaIt00InrBt7ehgKRFyOwogAE/exec";
 
 const CHECKLISTS = {
-  "Dry Chemical": [
+  "STANDARD": [
     "ถังอยู่ในตำแหน่งที่กำหนดและมีป้ายชี้บ่ง",
     "ตัวถังไม่มีรอยบุบ สนิม หรือการชำรุด",
     "เข็มเกจวัดแรงดันอยู่ในโซนสีเขียว",
@@ -50,6 +50,45 @@ const CHECKLISTS = {
     "ไม่พบความผิดปกติอื่นที่กระทบต่อการใช้งาน",
   ],
 };
+// Map extinguisher type to checklist group
+const TYPE_TO_CHECKLIST = {
+  "Dry chemical": "STANDARD",
+  "SC-AFFF+": "STANDARD",
+  "F-500": "STANDARD",
+  "CO2": "CO2",
+};
+function getChecklistForType(type) {
+  const normalizedType = String(type || "")
+    .trim()
+    .toUpperCase();
+
+  const group =
+    TYPE_TO_CHECKLIST[normalizedType];
+
+  return CHECKLISTS[group] || [];
+}
+function getWeekStart() {
+  const now = new Date();
+
+  const day = now.getDay();
+
+  const daysSinceMonday =
+    day === 0
+      ? 6
+      : day - 1;
+
+  const monday = new Date(now);
+
+  monday.setDate(
+    now.getDate() - daysSinceMonday
+  );
+
+  monday.setHours(
+    0, 0, 0, 0
+  );
+
+  return monday;
+}
 
 function StatusBadge({ status }) {
   const css =
@@ -112,7 +151,74 @@ const [syncMessage, setSyncMessage] = useState(
   ).length;
 
   const pending = items.length - completed;
+  const expiringSoon = items.filter(
+  (item) => {
+    const info =
+      getExpiryInfo(
+        item.expiryDate
+      );
 
+    return (
+      info.status === "EXPIRING"
+    );
+  }
+).length;
+
+const expired = items.filter(
+  (item) => {
+    const info =
+      getExpiryInfo(
+        item.expiryDate
+      );
+
+    return (
+      info.status === "EXPIRED"
+    );
+  }
+).length;
+  
+const weekStart =
+  getWeekStart();
+
+const weeklyLogs =
+  logs.filter((log) => {
+    if (!log.inspectedAt) {
+      return false;
+    }
+
+    return (
+      new Date(log.inspectedAt) >=
+      weekStart
+    );
+  });
+const weeklyCodes =
+  new Set(
+    weeklyLogs.map(
+      (log) =>
+        String(
+          log.extinguisherCode || ""
+        )
+          .trim()
+          .toUpperCase()
+    )
+  );
+
+const activeItems =
+  items.filter(
+    (item) =>
+      item.status === "ACTIVE"
+  );
+
+const inspectedThisWeek =
+  activeItems.filter(
+    (item) =>
+      weeklyCodes.has(item.code)
+  ).length;
+
+const pendingThisWeek =
+  activeItems.length -
+  inspectedThisWeek;
+  
   const filteredItems = useMemo(() => {
     const text = search.toLowerCase().trim();
 
@@ -148,65 +254,92 @@ function mapExtinguisher(row) {
     ""
   ).trim();
 
-  let type = rawType;
-
-  if (
-    rawType.toUpperCase() ===
-    "DRY CHEMICAL"
-  ) {
-    type = "Dry Chemical";
-  }
-
-  if (
-    rawType.toUpperCase() === "CO2"
-  ) {
-    type = "CO2";
-  }
-
   return {
     code,
 
-    type,
+    type: rawType,
 
     size: String(
-      row.Size ??
-      row.size ??
-      ""
-    ).trim(),
-
-    area: String(
-      row.Area ??
-      row.area ??
-      ""
+      row.Size ?? ""
     ).trim(),
 
     location: String(
-      row.Location ??
-      row.location ??
-      ""
+      row.Location ?? ""
     ).trim(),
 
+    manufactureDate:
+      row.ManufactureDate || null,
+
+    expiryDate:
+      row.ExpiryDate || null,
+
     status: String(
-      row.Status ??
-      row.status ??
-      "ACTIVE"
+      row.Status ?? "ACTIVE"
+    )
+      .trim()
+      .toUpperCase(),
+
+    replacementStatus: String(
+      row.ReplacementStatus ?? "NONE"
     ).trim(),
 
     lastResult: String(
-      row.LastResult ??
-      row.lastResult ??
-      "PENDING"
+      row.LastResult ?? "PENDING"
     )
       .trim()
       .toUpperCase(),
 
     lastInspection:
-      row.LastInspection ??
-      row.lastInspection ??
-      null,
+      row.LastInspection || null,
   };
 }
 
+function getExpiryInfo(expiryDate) {
+  if (!expiryDate) {
+    return {
+      status: "NO EXPIRY DATE",
+      days: null,
+    };
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const expiry =
+    new Date(expiryDate);
+
+  expiry.setHours(0, 0, 0, 0);
+
+  const diffMs =
+    expiry.getTime() -
+    today.getTime();
+
+  const days =
+    Math.ceil(
+      diffMs /
+      (1000 * 60 * 60 * 24)
+    );
+
+  if (days < 0) {
+    return {
+      status: "EXPIRED",
+      days,
+    };
+  }
+
+  if (days <= 120) {
+    return {
+      status: "EXPIRING",
+      days,
+    };
+  }
+
+  return {
+    status: "NORMAL",
+    days,
+  };
+}
+  
   function mapInspection(row) {
   let checklist = [];
 
@@ -358,11 +491,11 @@ async function loadOnlineData() {
   }
 
   const checklist =
-    CHECKLISTS[item.type];
+    getChecklistForType(item.type);
 
-  if (!checklist) {
+  if (checklist.length === 0) {
     alert(
-      `พบรหัส ${item.code} แต่ไม่พบ Checklist สำหรับ Type: [${item.type || "ไม่มีข้อมูล"}]`
+      `ยังไม่ได้กำหนด Checklist สำหรับ Type: ${item.type}`
     );
     return;
   }
@@ -975,7 +1108,7 @@ useEffect(() => {
             </h2>
 
             <div className="checklist">
-              {CHECKLISTS[selected.type].map(
+              {getChecklistForType(selected.type).map(
                 (question, index) => (
                   <div
                     className="check-card"
