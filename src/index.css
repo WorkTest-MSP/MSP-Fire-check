@@ -1315,3 +1315,158 @@ textarea:focus {
   cursor: not-allowed;
   opacity: 0.5;
 }
+
+
+.expiry-open-button {
+  width: 100%;
+
+  margin-bottom: 10px;
+  padding: 11px;
+
+  border: 1px solid #f59e0b;
+  border-radius: 11px;
+
+  font-weight: 700;
+
+  color: #92400e;
+  background: #fffbeb;
+}
+
+
+.expiry-filter {
+  display: flex;
+
+  gap: 7px;
+
+  margin-bottom: 16px;
+
+  overflow-x: auto;
+
+  padding-bottom: 5px;
+}
+
+.expiry-filter button {
+  flex: 0 0 auto;
+
+  padding: 8px 11px;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  color: #64748b;
+  background: white;
+}
+
+.expiry-filter button.expiry-filter-active {
+  border-color: #0f172a;
+
+  color: white;
+  background: #0f172a;
+}
+
+
+.expiry-list {
+  display: flex;
+  flex-direction: column;
+
+  gap: 12px;
+}
+
+
+.expiry-card {
+  padding: 16px;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+
+  background: white;
+}
+
+
+.expiry-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 10px;
+
+  padding-bottom: 12px;
+
+  border-bottom: 1px solid #f1f5f9;
+}
+
+
+.expiry-card-header > div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+
+.expiry-card-header strong {
+  font-size: 17px;
+}
+
+
+.expiry-card-header span {
+  font-size: 11px;
+
+  color: #64748b;
+}
+
+
+.expiry-detail {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 16px;
+
+  padding: 7px 0;
+
+  font-size: 12px;
+}
+
+
+.expiry-detail span {
+  color: #64748b;
+}
+
+
+.expiry-detail strong {
+  text-align: right;
+}
+
+
+.expiry-action-label {
+  display: block;
+
+  margin: 12px 0 6px;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  color: #475569;
+}
+
+
+.expiry-status-select {
+  width: 100%;
+
+  padding: 11px;
+
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+
+  color: #0f172a;
+  background: white;
+}
+
+
+.expiry-card .edit-master-button {
+  margin-top: 10px;
+}
