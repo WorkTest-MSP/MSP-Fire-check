@@ -120,6 +120,7 @@ export default function App() {
 const [logs, setLogs] = useState([]);
 
 const [loading, setLoading] = useState(true);
+const [saving, setSaving] = useState(false);
 const [syncMessage, setSyncMessage] = useState(
   "กำลังโหลดข้อมูล..."
 );
@@ -653,6 +654,8 @@ function openAddMaster() {
   const location =
     masterForm.location.trim();
 
+
+  // 1. Validation
   if (!code) {
     alert(
       "กรุณากรอกรหัสถังดับเพลิง"
@@ -681,6 +684,8 @@ function openAddMaster() {
     return;
   }
 
+
+  // 2. เตรียมข้อมูลส่งไป Google Apps Script
   const payload = {
     action:
       masterMode === "add"
@@ -708,11 +713,19 @@ function openAddMaster() {
       masterForm.replacementStatus,
   };
 
+
+  // 3. เปลี่ยนสถานะบนหน้าจอ
   setSyncMessage(
     "กำลังบันทึก Master..."
   );
 
+
+  // 4. เริ่ม Saving
+  setSaving(true);
+
+
   try {
+    // 5. ส่งข้อมูลไป Apps Script
     const response =
       await fetch(
         API_URL,
@@ -729,14 +742,17 @@ function openAddMaster() {
         }
       );
 
+
     if (!response.ok) {
       throw new Error(
         `HTTP error: ${response.status}`
       );
     }
 
+
     const data =
       await response.json();
+
 
     if (!data.success) {
       throw new Error(
@@ -745,7 +761,10 @@ function openAddMaster() {
       );
     }
 
+
+    // โหลด Master ล่าสุดกลับมา
     await loadOnlineData();
+
 
     setSyncMessage(
       masterMode === "add"
@@ -753,27 +772,38 @@ function openAddMaster() {
         : "แก้ไข Master เรียบร้อย"
     );
 
+
     alert(
       masterMode === "add"
         ? `เพิ่ม ${code} เรียบร้อย`
         : `แก้ไข ${code} เรียบร้อย`
     );
 
+
     setPage("list");
+
+
   } catch (error) {
     console.error(
       "Master save error:",
       error
     );
 
+
     setSyncMessage(
       "บันทึก Master ไม่สำเร็จ"
     );
+
 
     alert(
       error.message ||
       "ไม่สามารถบันทึก Master ได้"
     );
+
+
+  } finally {
+    // 6. สำเร็จหรือ Error ก็ต้องปิด Saving
+    setSaving(false);
   }
 }
   
@@ -1048,6 +1078,21 @@ useEffect(() => {
 
   return (
     <div className="app">
+      {saving && (
+        <div className="saving-overlay">
+        <div className="saving-box">
+        <div className="saving-spinner" />
+
+        <strong>
+           กำลังบันทึกข้อมูล
+        </strong>
+
+        <span>
+           กรุณารอสักครู่...
+        </span>
+      </div>
+  </div>
+)}
       <header className="top-header">
         <div className="header-inner">
           <div className="brand">
@@ -1675,13 +1720,16 @@ useEffect(() => {
       </button>
 
       <button
-        className="primary-button"
-        onClick={saveMaster}
+         className="primary-button"
+         onClick={saveMaster}
+         disabled={saving}
       >
-        {masterMode === "add"
-          ? "เพิ่มถังดับเพลิง"
-          : "บันทึกการแก้ไข"}
-      </button>
+         {saving
+           ? "กำลังบันทึก..."
+           : masterMode === "add"
+           ? "เพิ่มถังดับเพลิง"
+           : "บันทึกการแก้ไข"}
+       </button>>
     </div>
   </section>
 )}
