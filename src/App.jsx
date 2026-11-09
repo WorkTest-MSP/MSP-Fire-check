@@ -1338,9 +1338,13 @@ useEffect(() => {
                 </p>
               </div>
             </div>
+            
             <button
                   className="primary-button"
-                   onClick={openAddMaster}
+                  onClick={openAddMaster}
+                  style={{
+                    marginBottom: "14px",
+                  }}
             >
               + เพิ่มถังดับเพลิง
             </button>
@@ -1359,36 +1363,49 @@ useEffect(() => {
 
             <div className="item-list">
               {filteredItems.map((item) => (
-                <button
-                  className="extinguisher-card"
-                  key={item.code}
-                  onClick={() =>
-                    openInspection(item)
-                  }
+                <div
+                     className="extinguisher-card"
+                     key={item.code}
                 >
-                  <div className="fire-icon">
+                    <button
+                      className="extinguisher-main"
+                      onClick={() =>
+                      openInspection(item)
+                      }
+                    >
+                    <div className="fire-icon">
                     <Flame size={22} />
-                  </div>
+               </div>
 
-                  <div className="item-info">
-                    <strong>
-                      {item.code}
-                    </strong>
+               <div className="item-info">
+                 <strong>
+                     {item.code}
+                 </strong>
 
-                    <span>
-                      {item.type} • {item.size}
-                    </span>
+                 <span>
+                     {item.type} • {item.size}
+                 </span>
 
-                    <span>
-                      <MapPin size={13} />
-                      {item.area} • {item.location}
-                    </span>
-                  </div>
+                 <span>
+                     <MapPin size={13} />
+                     {item.location}
+                </span>
+              </div>
 
-                  <StatusBadge
-                    status={item.lastResult}
-                  />
-                </button>
+              <StatusBadge
+                status={item.lastResult}
+              />
+              </button>
+
+             <button
+                  className="edit-master-button"
+                  onClick={() =>
+                  openEditMaster(item)
+                  }
+             >
+                แก้ไข
+             </button>
+              </div>
               ))}
             </div>
           </>
