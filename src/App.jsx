@@ -806,7 +806,180 @@ function openAddMaster() {
     setSaving(false);
   }
 }
+
+  async function deactivateMaster(
+  item
+) {
+  if (!item) {
+    return;
+  }
+
+  const confirmed =
+    window.confirm(
+      `ต้องการเปลี่ยน ${item.code} เป็น INACTIVE หรือไม่?\n\nประวัติการตรวจจะยังคงอยู่`
+    );
+
+  if (!confirmed) {
+    return;
+  }
+
+  setSaving(true);
+
+  setSyncMessage(
+    `กำลัง Deactivate ${item.code}...`
+  );
+
+  try {
+    const response =
+      await fetch(
+        API_URL,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "text/plain;charset=utf-8",
+          },
+
+          body:
+            JSON.stringify({
+              action:
+                "deactivateExtinguisher",
+
+              code:
+                item.code,
+            }),
+        }
+      );
+
+    const data =
+      await response.json();
+
+    if (!data.success) {
+      throw new Error(
+        data.message ||
+        "Deactivate failed"
+      );
+    }
+
+    await loadOnlineData();
+
+    setSyncMessage(
+      `${item.code} เปลี่ยนเป็น INACTIVE แล้ว`
+    );
+
+    alert(
+      `${item.code} Deactivate เรียบร้อย`
+    );
+
+    setPage("list");
+
+  } catch (error) {
+    console.error(
+      "Deactivate error:",
+      error
+    );
+
+    alert(
+      error.message ||
+      "ไม่สามารถ Deactivate ได้"
+    );
+
+  } finally {
+    setSaving(false);
+  }
+}
   
+async function deleteMaster(
+  item
+) {
+  if (!item) {
+    return;
+  }
+
+  const confirmed =
+    window.confirm(
+      `ต้องการลบ ${item.code} ถาวรหรือไม่?\n\nจะลบได้เฉพาะถังที่ไม่มี Inspection History`
+    );
+
+  if (!confirmed) {
+    return;
+  }
+
+  setSaving(true);
+
+  setSyncMessage(
+    `กำลังตรวจสอบและลบ ${item.code}...`
+  );
+
+  try {
+    const response =
+      await fetch(
+        API_URL,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "text/plain;charset=utf-8",
+          },
+
+          body:
+            JSON.stringify({
+              action:
+                "deleteExtinguisher",
+
+              code:
+                item.code,
+            }),
+        }
+      );
+
+    const data =
+      await response.json();
+
+    if (!data.success) {
+      if (data.hasHistory) {
+        alert(
+          `${item.code} มีประวัติการตรวจอยู่\n\nระบบไม่อนุญาตให้ลบถาวร กรุณาใช้ Deactivate แทน`
+        );
+
+        return;
+      }
+
+      throw new Error(
+        data.message ||
+        "Delete failed"
+      );
+    }
+
+    await loadOnlineData();
+
+    setSyncMessage(
+      `ลบ ${item.code} เรียบร้อย`
+    );
+
+    alert(
+      `${item.code} ถูกลบเรียบร้อย`
+    );
+
+    setPage("list");
+
+  } catch (error) {
+    console.error(
+      "Delete master error:",
+      error
+    );
+
+    alert(
+      error.message ||
+      "ไม่สามารถลบ Master ได้"
+    );
+
+  } finally {
+    setSaving(false);
+  }
+}
   function openInspection(item) {
   stopCamera();
 
@@ -1731,6 +1904,45 @@ useEffect(() => {
            : "บันทึกการแก้ไข"}
        </button>>
     </div>
+{masterMode === "edit" && (
+  <div className="danger-zone">
+    <div className="danger-zone-title">
+      Master Management
+    </div>
+
+    <p>
+      หากถังไม่ได้ใช้งานแล้ว ให้ Deactivate
+      เพื่อรักษาประวัติการตรวจ
+    </p>
+
+    {masterForm.status ===
+      "ACTIVE" && (
+      <button
+        className="deactivate-button"
+        onClick={() =>
+          deactivateMaster(
+            masterForm
+          )
+        }
+        disabled={saving}
+      >
+        Deactivate
+      </button>
+    )}
+
+    <button
+      className="delete-master-button"
+      onClick={() =>
+        deleteMaster(
+          masterForm
+        )
+      }
+      disabled={saving}
+    >
+      Delete Permanently
+    </button>
+  </div>
+)}
   </section>
 )}
         {page === "inspection" && selected && (
