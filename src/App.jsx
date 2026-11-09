@@ -128,6 +128,20 @@ const [syncMessage, setSyncMessage] = useState(
   const [search, setSearch] = useState("");
 
   const [selected, setSelected] = useState(null);
+  const [masterMode, setMasterMode] =
+  useState("add");
+
+const [masterForm, setMasterForm] =
+  useState({
+    code: "",
+    type: "Dry Chemical",
+    size: "",
+    location: "",
+    manufactureDate: "",
+    expiryDate: "",
+    status: "ACTIVE",
+    replacementStatus: "NONE",
+  });
   const [answers, setAnswers] = useState([]);
 
   const [inspector, setInspector] = useState(
@@ -556,7 +570,213 @@ async function loadOnlineData() {
     stopCamera();
     setPage(nextPage);
   }
+  
+function openAddMaster() {
+  setMasterMode("add");
 
+  setMasterForm({
+    code: "",
+    type: "Dry Chemical",
+    size: "",
+    location: "",
+    manufactureDate: "",
+    expiryDate: "",
+    status: "ACTIVE",
+    replacementStatus: "NONE",
+  });
+
+  setPage("masterForm");
+}
+
+  function openEditMaster(item) {
+  setMasterMode("edit");
+
+  setMasterForm({
+    code: item.code || "",
+    type:
+      item.type ||
+      "Dry Chemical",
+
+    size:
+      item.size || "",
+
+    location:
+      item.location || "",
+
+    manufactureDate:
+      item.manufactureDate
+        ? String(
+            item.manufactureDate
+          ).slice(0, 10)
+        : "",
+
+    expiryDate:
+      item.expiryDate
+        ? String(
+            item.expiryDate
+          ).slice(0, 10)
+        : "",
+
+    status:
+      item.status ||
+      "ACTIVE",
+
+    replacementStatus:
+      item.replacementStatus ||
+      "NONE",
+  });
+
+  setPage("masterForm");
+}
+
+  function updateMasterField(
+  field,
+  value
+) {
+  setMasterForm(
+    (previous) => ({
+      ...previous,
+      [field]: value,
+    })
+  );
+}
+
+  async function saveMaster() {
+  const code =
+    masterForm.code
+      .trim()
+      .toUpperCase();
+
+  const type =
+    masterForm.type.trim();
+
+  const location =
+    masterForm.location.trim();
+
+  if (!code) {
+    alert(
+      "กรุณากรอกรหัสถังดับเพลิง"
+    );
+    return;
+  }
+
+  if (!type) {
+    alert(
+      "กรุณาเลือกประเภทถัง"
+    );
+    return;
+  }
+
+  if (!location) {
+    alert(
+      "กรุณากรอกตำแหน่งติดตั้ง"
+    );
+    return;
+  }
+
+  if (!masterForm.expiryDate) {
+    alert(
+      "กรุณาระบุวันหมดอายุ"
+    );
+    return;
+  }
+
+  const payload = {
+    action:
+      masterMode === "add"
+        ? "addExtinguisher"
+        : "updateExtinguisher",
+
+    code,
+    type,
+
+    size:
+      masterForm.size.trim(),
+
+    location,
+
+    manufactureDate:
+      masterForm.manufactureDate,
+
+    expiryDate:
+      masterForm.expiryDate,
+
+    status:
+      masterForm.status,
+
+    replacementStatus:
+      masterForm.replacementStatus,
+  };
+
+  setSyncMessage(
+    "กำลังบันทึก Master..."
+  );
+
+  try {
+    const response =
+      await fetch(
+        API_URL,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "text/plain;charset=utf-8",
+          },
+
+          body:
+            JSON.stringify(payload),
+        }
+      );
+
+    if (!response.ok) {
+      throw new Error(
+        `HTTP error: ${response.status}`
+      );
+    }
+
+    const data =
+      await response.json();
+
+    if (!data.success) {
+      throw new Error(
+        data.message ||
+        "Master save failed"
+      );
+    }
+
+    await loadOnlineData();
+
+    setSyncMessage(
+      masterMode === "add"
+        ? "เพิ่ม Master เรียบร้อย"
+        : "แก้ไข Master เรียบร้อย"
+    );
+
+    alert(
+      masterMode === "add"
+        ? `เพิ่ม ${code} เรียบร้อย`
+        : `แก้ไข ${code} เรียบร้อย`
+    );
+
+    setPage("list");
+  } catch (error) {
+    console.error(
+      "Master save error:",
+      error
+    );
+
+    setSyncMessage(
+      "บันทึก Master ไม่สำเร็จ"
+    );
+
+    alert(
+      error.message ||
+      "ไม่สามารถบันทึก Master ได้"
+    );
+  }
+}
+  
   function openInspection(item) {
   stopCamera();
 
@@ -1118,7 +1338,13 @@ useEffect(() => {
                 </p>
               </div>
             </div>
-
+            <button
+                  className="primary-button"
+                   onClick={openAddMaster}
+            >
+              + เพิ่มถังดับเพลิง
+            </button>
+            
             <div className="search-box">
               <Search size={19} />
 
@@ -1168,6 +1394,280 @@ useEffect(() => {
           </>
         )}
 
+{page === "masterForm" && (
+  <section className="inspection-page">
+    <button
+      className="back-button"
+      onClick={() =>
+        setPage("list")
+      }
+    >
+      ← กลับทะเบียน
+    </button>
+
+    <div className="page-heading">
+      <div>
+        <h1>
+          {masterMode === "add"
+            ? "เพิ่มถังดับเพลิง"
+            : "แก้ไขข้อมูลถังดับเพลิง"}
+        </h1>
+
+        <p>
+          {masterMode === "add"
+            ? "สร้างรายการ Master ใหม่"
+            : `แก้ไข Master ${masterForm.code}`}
+        </p>
+      </div>
+    </div>
+
+    <section className="form-card">
+      <label>
+        รหัสถังดับเพลิง *
+      </label>
+
+      <input
+        value={masterForm.code}
+        onChange={(event) =>
+          updateMasterField(
+            "code",
+            event.target.value
+              .trimStart()
+              .toUpperCase()
+          )
+        }
+        placeholder="เช่น FEG-1"
+        disabled={
+          masterMode === "edit"
+        }
+      />
+
+      {masterMode === "edit" && (
+        <p className="field-help">
+          ไม่สามารถเปลี่ยน Code
+          หลังสร้าง Master แล้ว
+        </p>
+      )}
+    </section>
+
+    <section className="form-card">
+      <label>
+        ประเภทถัง *
+      </label>
+
+      <select
+        value={masterForm.type}
+        onChange={(event) =>
+          updateMasterField(
+            "type",
+            event.target.value
+          )
+        }
+      >
+        <option value="Dry Chemical">
+          Dry Chemical
+        </option>
+
+        <option value="CO2">
+          CO2
+        </option>
+
+        <option value="SC-AFFF+">
+          SC-AFFF+
+        </option>
+
+        <option value="F-500">
+          F-500
+        </option>
+      </select>
+    </section>
+
+    <section className="form-card">
+      <label>
+        ขนาด
+      </label>
+
+      <input
+        value={masterForm.size}
+        onChange={(event) =>
+          updateMasterField(
+            "size",
+            event.target.value
+          )
+        }
+        placeholder="เช่น 10 lb, 10 kg"
+      />
+    </section>
+
+    <section className="form-card">
+      <label>
+        ตำแหน่งติดตั้ง *
+      </label>
+
+      <input
+        value={masterForm.location}
+        onChange={(event) =>
+          updateMasterField(
+            "location",
+            event.target.value
+          )
+        }
+        placeholder="เช่น Packing Line A"
+      />
+    </section>
+
+    <section className="form-card">
+      <label>
+        วันที่ผลิต
+      </label>
+
+      <input
+        type="date"
+        value={
+          masterForm.manufactureDate
+        }
+        onChange={(event) =>
+          updateMasterField(
+            "manufactureDate",
+            event.target.value
+          )
+        }
+      />
+    </section>
+
+    <section className="form-card">
+      <label>
+        วันหมดอายุ *
+      </label>
+
+      <input
+        type="date"
+        value={masterForm.expiryDate}
+        onChange={(event) =>
+          updateMasterField(
+            "expiryDate",
+            event.target.value
+          )
+        }
+      />
+
+      {masterForm.expiryDate && (
+        <p className="field-help">
+          {(() => {
+            const info =
+              getExpiryInfo(
+                masterForm.expiryDate
+              );
+
+            if (
+              info.status ===
+              "EXPIRED"
+            ) {
+              return `หมดอายุแล้ว ${Math.abs(
+                info.days
+              )} วัน`;
+            }
+
+            if (
+              info.status ===
+              "EXPIRING"
+            ) {
+              return `เหลือ ${info.days} วัน ก่อนหมดอายุ`;
+            }
+
+            return `เหลือ ${info.days} วัน ก่อนหมดอายุ`;
+          })()}
+        </p>
+      )}
+    </section>
+
+    <section className="form-card">
+      <label>
+        สถานะการใช้งาน
+      </label>
+
+      <select
+        value={masterForm.status}
+        onChange={(event) =>
+          updateMasterField(
+            "status",
+            event.target.value
+          )
+        }
+      >
+        <option value="ACTIVE">
+          ACTIVE
+        </option>
+
+        <option value="INACTIVE">
+          INACTIVE
+        </option>
+      </select>
+    </section>
+
+    <section className="form-card">
+      <label>
+        Replacement Status
+      </label>
+
+      <select
+        value={
+          masterForm.replacementStatus
+        }
+        onChange={(event) =>
+          updateMasterField(
+            "replacementStatus",
+            event.target.value
+          )
+        }
+      >
+        <option value="NONE">
+          NONE
+        </option>
+
+        <option value="Request Replacement">
+          Request Replacement
+        </option>
+
+        <option value="Procurement">
+          Procurement
+        </option>
+
+        <option value="Replacement">
+          Replacement
+        </option>
+
+        <option value="Verification">
+          Verification
+        </option>
+
+        <option value="Completed">
+          Completed
+        </option>
+      </select>
+    </section>
+
+    <div className="master-form-actions">
+      <button
+        className="secondary-button"
+        onClick={() =>
+          setPage("list")
+        }
+      >
+        ยกเลิก
+      </button>
+
+      <button
+        className="primary-button"
+        onClick={saveMaster}
+      >
+        {masterMode === "add"
+          ? "เพิ่มถังดับเพลิง"
+          : "บันทึกการแก้ไข"}
+      </button>
+    </div>
+  </section>
+)}
         {page === "inspection" && selected && (
           <section className="inspection-page">
             <button
