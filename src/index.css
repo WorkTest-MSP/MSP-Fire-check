@@ -637,6 +637,20 @@ textarea:focus {
 .extinguisher-card {
   width: 100%;
 
+  padding: 0;
+
+  overflow: hidden;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+
+  color: #0f172a;
+  background: white;
+}
+
+.extinguisher-main {
+  width: 100%;
+
   display: flex;
   align-items: center;
 
@@ -644,8 +658,7 @@ textarea:focus {
 
   padding: 14px;
 
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
+  border: 0;
 
   text-align: left;
 
@@ -653,11 +666,26 @@ textarea:focus {
   background: white;
 }
 
-.extinguisher-card:hover {
-  border-color: #cbd5e1;
-
+.extinguisher-main:hover {
   background: #f8fafc;
 }
+
+.edit-master-button {
+  width: 100%;
+
+  padding: 10px;
+
+  border: 0;
+  border-top: 1px solid #e2e8f0;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  color: #0369a1;
+  background: #f0f9ff;
+}
+
+
 
 .fire-icon {
   flex: 0 0 auto;
