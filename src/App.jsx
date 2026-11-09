@@ -218,6 +218,52 @@ const inspectedThisWeek =
 const pendingThisWeek =
   activeItems.length -
   inspectedThisWeek;
+  const latestWeeklyResult = new Map();
+
+weeklyLogs.forEach((log) => {
+  const code = String(
+    log.extinguisherCode || ""
+  )
+    .trim()
+    .toUpperCase();
+
+  if (!code) {
+    return;
+  }
+
+  if (!latestWeeklyResult.has(code)) {
+    latestWeeklyResult.set(
+      code,
+      log.result
+    );
+  }
+});
+
+const passThisWeek =
+  activeItems.filter(
+    (item) =>
+      latestWeeklyResult.get(
+        item.code
+      ) === "PASS"
+  ).length;
+
+const ngThisWeek =
+  activeItems.filter(
+    (item) =>
+      latestWeeklyResult.get(
+        item.code
+      ) === "NG"
+  ).length;
+
+const weeklyCompletion =
+  activeItems.length > 0
+    ? Math.round(
+        (
+          inspectedThisWeek /
+          activeItems.length
+        ) * 100
+      )
+    : 0;
   
   const filteredItems = useMemo(() => {
     const text = search.toLowerCase().trim();
@@ -806,62 +852,54 @@ useEffect(() => {
               </p>
 
               <div className="progress">
+  <div className="progress">
   <div
     className="progress-value"
     style={{
-      width: `${
-        items.length > 0
-          ? (completed / items.length) * 100
-          : 0
-      }%`,
+      width: `${weeklyCompletion}%`,
     }}
   />
 </div>
 
 <div className="hero-summary">
   <span>
-    ตรวจแล้ว {completed} จุด
+    ตรวจแล้ว {inspectedThisWeek} จุด
   </span>
 
-  <span>
-    {items.length > 0
-      ? Math.round(
-          (completed / items.length) * 100
-        )
-      : 0}
-    %
+ <span>
+    {weeklyCompletion}%
   </span>
 </div>
             </section>
 
             <section className="stats-grid">
               <StatCard
-                title="ทั้งหมด"
-                value={items.length}
-                type="blue"
-                icon={ShieldCheck}
-              />
+  title="Active"
+  value={activeItems.length}
+  type="blue"
+  icon={ShieldCheck}
+/>
 
-              <StatCard
-                title="ตรวจแล้ว"
-                value={completed}
-                type="green"
-                icon={CheckCircle2}
-              />
+<StatCard
+  title="ตรวจแล้วสัปดาห์นี้"
+  value={inspectedThisWeek}
+  type="green"
+  icon={CheckCircle2}
+/>
 
-              <StatCard
-                title="ยังไม่ตรวจ"
-                value={pending}
-                type="yellow"
-                icon={ClipboardCheck}
-              />
+<StatCard
+  title="รอตรวจสัปดาห์นี้"
+  value={pendingThisWeek}
+  type="yellow"
+  icon={ClipboardCheck}
+/>
 
-              <StatCard
-                title="พบ NG"
-                value={ng}
-                type="red"
-                icon={TriangleAlert}
-              />
+<StatCard
+  title="NG สัปดาห์นี้"
+  value={ngThisWeek}
+  type="red"
+  icon={TriangleAlert}
+/>
             </section>
 
             <button
@@ -880,33 +918,28 @@ useEffect(() => {
               </div>
 
               <div className="summary-row">
-                <span>PASS</span>
+  <span>PASS This Week</span>
 
-                <strong className="green-text">
-                  {
-                    items.filter(
-                      (item) =>
-                        item.lastResult === "PASS"
-                    ).length
-                  }
-                </strong>
-              </div>
+  <strong className="green-text">
+    {passThisWeek}
+  </strong>
+</div>
 
-              <div className="summary-row">
-                <span>NG</span>
+<div className="summary-row">
+  <span>NG This Week</span>
 
-                <strong className="red-text">
-                  {ng}
-                </strong>
-              </div>
+  <strong className="red-text">
+    {ngThisWeek}
+  </strong>
+</div>
 
-              <div className="summary-row">
-                <span>PENDING</span>
+<div className="summary-row">
+  <span>PENDING This Week</span>
 
-                <strong className="yellow-text">
-                  {pending}
-                </strong>
-              </div>
+  <strong className="yellow-text">
+    {pendingThisWeek}
+  </strong>
+</div>
             </section>
             
           </>
