@@ -135,8 +135,7 @@ export default function App() {
     status: "ACTIVE",
     replacementStatus: "NONE",
   });
-  const [replacementItem,setReplacementItem] = u
-    seState(null);
+  const [replacementItem,setReplacementItem] = useState(null);
   const [replacementForm,setReplacementForm] = useState({
     newCode: "",
     type: "Dry Chemical",
@@ -2220,20 +2219,7 @@ useEffect(() => {
                     Completed
                   </option>
                 </select>
-
-                {item.replacementStatus ==="Verification" && (
-                   <button
-                      className="replacement-complete-button"
-                      onClick={() =>
-                      openReplacementCompletion(item)
-                    }
-                      disabled={saving}
-                   >
-                      Complete Replacement
-                  </button>
-              )}
-
-                
+    
                 {item.replacementStatus === "Verification" && (
                    <button
                       className="replacement-complete-button"
@@ -2246,8 +2232,6 @@ useEffect(() => {
                  </button>
                  )}
 
-
-                
                 <button
                   className="edit-master-button"
                   onClick={() =>
@@ -2762,7 +2746,7 @@ useEffect(() => {
            : masterMode === "add"
            ? "เพิ่มถังดับเพลิง"
            : "บันทึกการแก้ไข"}
-       </button>>
+       </button>
     </div>
 {masterMode === "edit" && (
   <div className="danger-zone">
@@ -2832,7 +2816,7 @@ useEffect(() => {
 
             <div className="location-line">
               <MapPin size={17} />
-              {selected.area} / {selected.location}
+              {selected.location}
             </div>
 
             <section className="form-card">
