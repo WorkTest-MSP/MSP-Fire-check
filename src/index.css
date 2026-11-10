@@ -1319,7 +1319,9 @@ textarea:focus {
 .expiry-open-button {
   width: 100%;
 
-  margin-bottom: 10px;
+  margin-top: 6px;
+  margin-bottom: 0;
+  
   padding: 11px;
 
   border: 1px solid #f59e0b;
@@ -1704,17 +1706,20 @@ textarea:focus {
 
   gap: 40px;
 
-  align-items: center;
+  align-items: start;
+  margin-bottom: 20px;
 }
 
 
 .expiry-big-card {
-  min-height: 165px;
+  min-height: 145px;
 
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+
+  padding: 14px 18px;
 
   border: 2px solid #b56b5e;
   border-radius: 24px;
@@ -1729,8 +1734,10 @@ textarea:focus {
 
 
 .expiry-big-card strong {
-  font-size: 72px;
-  line-height: 1;
+  margin: 6px 0;
+  
+  font-size: 64px;
+  line-height: 0.95;
 }
 
 
@@ -1748,9 +1755,12 @@ textarea:focus {
 
 
 .replacement-title {
-  margin-bottom: 5px;
+  margin-bottom: 8px;
 
   font-size: 18px;
+  font-weight: 800;
+
+  color: #0f172a;
 }
 
 
