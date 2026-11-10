@@ -135,6 +135,16 @@ export default function App() {
     status: "ACTIVE",
     replacementStatus: "NONE",
   });
+  const [replacementItem,setReplacementItem] = u
+    seState(null);
+  const [replacementForm,setReplacementForm] = useState({
+    newCode: "",
+    type: "Dry Chemical",
+    size: "",
+    location: "",
+    manufactureDate: "",
+    expiryDate: "",
+  });
   const [answers, setAnswers] = useState([]);
   const [inspector, setInspector] = useState(
     localStorage.getItem("firecheck70_inspector") || ""
@@ -1029,6 +1039,236 @@ async function changeReplacementStatus(
     setSaving(false);
   }
 }
+
+  function openReplacementCompletion(item) {
+  if (!item) {
+    return;
+  }
+
+  setReplacementItem(item);
+
+  setReplacementForm({
+    newCode: "",
+
+    type:
+      item.type ||
+      "Dry Chemical",
+
+    size:
+      item.size || "",
+
+    location:
+      item.location || "",
+
+    manufactureDate: "",
+
+    expiryDate: "",
+  });
+
+  setPage("replacementComplete");
+}
+
+function updateReplacementField(
+  field,
+  value
+) {
+  setReplacementForm(
+    (previous) => ({
+      ...previous,
+      [field]: value,
+    })
+  );
+}
+
+ async function completeReplacement() {
+  if (!replacementItem) {
+    alert("ไม่พบข้อมูลถังเก่า");
+    return;
+  }
+
+  const newCode =
+    replacementForm.newCode
+      .trim()
+      .toUpperCase();
+
+  if (!newCode) {
+    alert("กรุณากรอกรหัสถังใหม่");
+    return;
+  }
+
+  if (
+    newCode ===
+    replacementItem.code
+  ) {
+    alert(
+      "รหัสถังใหม่ต้องไม่ซ้ำกับรหัสถังเก่า"
+    );
+    return;
+  }
+
+  if (
+    !replacementForm.type.trim()
+  ) {
+    alert("กรุณาเลือกประเภทถังใหม่");
+    return;
+  }
+
+  if (
+    !replacementForm.location.trim()
+  ) {
+    alert(
+      "กรุณากรอกตำแหน่งติดตั้ง"
+    );
+    return;
+  }
+
+  if (
+    !replacementForm.manufactureDate
+  ) {
+    alert(
+      "กรุณาระบุวันที่ผลิตถังใหม่"
+    );
+    return;
+  }
+
+  if (
+    !replacementForm.expiryDate
+  ) {
+    alert(
+      "กรุณาระบุวันหมดอายุถังใหม่"
+    );
+    return;
+  }
+
+  const manufactureDate =
+    new Date(
+      replacementForm.manufactureDate
+    );
+
+  const expiryDate =
+    new Date(
+      replacementForm.expiryDate
+    );
+
+  if (
+    expiryDate <= manufactureDate
+  ) {
+    alert(
+      "วันหมดอายุต้องอยู่หลังวันที่ผลิต"
+    );
+    return;
+  }
+
+  const confirmed =
+    window.confirm(
+      `ยืนยันการเปลี่ยนถังดับเพลิง?\n\n` +
+      `ถังเก่า: ${replacementItem.code}\n` +
+      `ถังใหม่: ${newCode}\n\n` +
+      `หลังยืนยัน ถังเก่าจะเปลี่ยนเป็น INACTIVE และระบบจะสร้าง Master ถังใหม่`
+    );
+
+  if (!confirmed) {
+    return;
+  }
+
+  setSaving(true);
+
+  setSyncMessage(
+    "กำลังบันทึก Replacement..."
+  );
+
+  try {
+    const response =
+      await fetch(
+        API_URL,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "text/plain;charset=utf-8",
+          },
+
+          body: JSON.stringify({
+            action:
+              "completeReplacement",
+
+            oldCode:
+              replacementItem.code,
+
+            newCode,
+
+            type:
+              replacementForm.type,
+
+            size:
+              replacementForm.size,
+
+            location:
+              replacementForm.location,
+
+            manufactureDate:
+              replacementForm
+                .manufactureDate,
+
+            expiryDate:
+              replacementForm
+                .expiryDate,
+          }),
+        }
+      );
+
+    if (!response.ok) {
+      throw new Error(
+        `HTTP error: ${response.status}`
+      );
+    }
+
+    const data =
+      await response.json();
+
+    if (!data.success) {
+      throw new Error(
+        data.message ||
+        "Replacement failed"
+      );
+    }
+
+    await loadOnlineData();
+
+    setSyncMessage(
+      `Replacement ${replacementItem.code} → ${newCode} เรียบร้อย`
+    );
+
+    alert(
+      `Replacement เรียบร้อย\n\n` +
+      `ถังเก่า: ${replacementItem.code} → INACTIVE\n` +
+      `ถังใหม่: ${newCode} → ACTIVE`
+    );
+
+    setReplacementItem(null);
+
+    setPage("expiry");
+  } catch (error) {
+    console.error(
+      "Replacement completion error:",
+      error
+    );
+
+    setSyncMessage(
+      "บันทึก Replacement ไม่สำเร็จ"
+    );
+
+    alert(
+      error.message ||
+      "ไม่สามารถ Complete Replacement ได้"
+    );
+  } finally {
+    setSaving(false);
+  }
+} 
+
+  
   
 async function deleteMaster(
   item
@@ -1981,7 +2221,33 @@ useEffect(() => {
                   </option>
                 </select>
 
+                {item.replacementStatus ==="Verification" && (
+                   <button
+                      className="replacement-complete-button"
+                      onClick={() =>
+                      openReplacementCompletion(item)
+                    }
+                      disabled={saving}
+                   >
+                      Complete Replacement
+                  </button>
+              )}
 
+                
+                {item.replacementStatus === "Verification" && (
+                   <button
+                      className="replacement-complete-button"
+                      onClick={() =>
+                      openReplacementCompletion(item)
+                  }
+                      disabled={saving}
+                   >
+                      Complete Replacement
+                 </button>
+                 )}
+
+
+                
                 <button
                   className="edit-master-button"
                   onClick={() =>
@@ -2001,6 +2267,228 @@ useEffect(() => {
   </section>
 )}
 
+{page === "replacementComplete" &&
+  replacementItem && (
+  <section className="inspection-page">
+    <button
+      className="back-button"
+      onClick={() =>
+        setPage("expiry")
+      }
+      disabled={saving}
+    >
+      ← กลับ Expiry Monitoring
+    </button>
+
+    <div className="page-heading">
+      <div>
+        <h1>
+          Replacement Verification
+        </h1>
+
+        <p>
+          ถังเก่า:{" "}
+          {replacementItem.code}
+        </p>
+      </div>
+    </div>
+
+    <div className="help-box">
+      เมื่อบันทึกสำเร็จ
+      ระบบจะเปลี่ยนถังเก่าเป็น INACTIVE
+      และสร้าง Master ถังใหม่เป็น ACTIVE
+    </div>
+
+    <section className="form-card">
+      <label>
+        รหัสถังเก่า
+      </label>
+
+      <input
+        value={replacementItem.code}
+        disabled
+      />
+    </section>
+
+    <section className="form-card">
+      <label>
+        รหัสถังใหม่ *
+      </label>
+
+      <input
+        value={
+          replacementForm.newCode
+        }
+        onChange={(event) =>
+          updateReplacementField(
+            "newCode",
+            event.target.value
+              .trimStart()
+              .toUpperCase()
+          )
+        }
+        placeholder="เช่น FEG-101"
+      />
+    </section>
+
+    <section className="form-card">
+      <label>
+        Type *
+      </label>
+
+      <select
+        value={
+          replacementForm.type
+        }
+        onChange={(event) =>
+          updateReplacementField(
+            "type",
+            event.target.value
+          )
+        }
+      >
+        <option value="Dry Chemical">
+          Dry Chemical
+        </option>
+
+        <option value="CO2">
+          CO2
+        </option>
+
+        <option value="SC-AFFF+">
+          SC-AFFF+
+        </option>
+
+        <option value="F-500">
+          F-500
+        </option>
+      </select>
+    </section>
+
+    <section className="form-card">
+      <label>
+        Size
+      </label>
+
+      <input
+        value={
+          replacementForm.size
+        }
+        onChange={(event) =>
+          updateReplacementField(
+            "size",
+            event.target.value
+          )
+        }
+        placeholder="เช่น 10 lb"
+      />
+    </section>
+
+    <section className="form-card">
+      <label>
+        Location *
+      </label>
+
+      <input
+        value={
+          replacementForm.location
+        }
+        onChange={(event) =>
+          updateReplacementField(
+            "location",
+            event.target.value
+          )
+        }
+        placeholder="ตำแหน่งติดตั้งถังใหม่"
+      />
+    </section>
+
+    <section className="form-card">
+      <label>
+        Manufacture Date *
+      </label>
+
+      <input
+        type="date"
+        value={
+          replacementForm
+            .manufactureDate
+        }
+        onChange={(event) =>
+          updateReplacementField(
+            "manufactureDate",
+            event.target.value
+          )
+        }
+      />
+    </section>
+
+    <section className="form-card">
+      <label>
+        Expiry Date *
+      </label>
+
+      <input
+        type="date"
+        value={
+          replacementForm.expiryDate
+        }
+        onChange={(event) =>
+          updateReplacementField(
+            "expiryDate",
+            event.target.value
+          )
+        }
+      />
+
+      {replacementForm.expiryDate && (
+        <p className="field-help">
+          {(() => {
+            const info =
+              getExpiryInfo(
+                replacementForm
+                  .expiryDate
+              );
+
+            if (
+              info.status ===
+              "EXPIRED"
+            ) {
+              return "วันหมดอายุไม่ถูกต้อง";
+            }
+
+            return `เหลือ ${info.days} วัน ก่อนหมดอายุ`;
+          })()}
+        </p>
+      )}
+    </section>
+
+    <div className="master-form-actions">
+      <button
+        className="secondary-button"
+        onClick={() =>
+          setPage("expiry")
+        }
+        disabled={saving}
+      >
+        ยกเลิก
+      </button>
+
+      <button
+        className="primary-button"
+        onClick={
+          completeReplacement
+        }
+        disabled={saving}
+      >
+        {saving
+          ? "กำลังบันทึก..."
+          : "ยืนยัน Replacement"}
+      </button>
+    </div>
+  </section>
+)}
+        
 {page === "masterForm" && (
   <section className="inspection-page">
     <button
