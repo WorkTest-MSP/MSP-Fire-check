@@ -1689,8 +1689,8 @@ useEffect(() => {
 
       <main className="main">
         {page === "home" && (
-          <>
-            <div
+  <>
+    <div
       style={{
         marginBottom: "12px",
         fontSize: "12px",
@@ -1700,262 +1700,200 @@ useEffect(() => {
     >
       {syncMessage}
     </div>
-            <section className="home-dashboard">
 
-  <div className="dashboard-left">
+    <section className="home-dashboard">
+      <div className="dashboard-left">
+        <div className="hero-label">
+          FIRE EXTINGUISHER INSPECTION
+        </div>
 
-    <div className="hero-label">
-      FIRE EXTINGUISHER INSPECTION
-    </div>
+        <h1>
+          ตรวจถังดับเพลิง
+          <br />
+          {activeItems.length} จุด
+        </h1>
 
-    <h1>
-      ตรวจถังดับเพลิง
-      <br />
-      {activeItems.length} จุด
-    </h1>
+        <div className="weekly-ratio">
+          Weekly checking ratio
+        </div>
 
-    <div className="weekly-ratio">
-      Weekly checking ratio
-    </div>
+        <div className="progress">
+          <div
+            className="progress-value"
+            style={{
+              width: `${weeklyCompletion}%`,
+            }}
+          />
+        </div>
 
-    <div className="progress">
-      <div
-        className="progress-value"
-        style={{
-          width:
-            `${weeklyCompletion}%`,
-        }}
-      />
-    </div>
+        <div className="hero-summary">
+          <strong>
+            ตรวจแล้ว {inspectedThisWeek} จุด
+          </strong>
 
-    <div className="hero-summary">
+          <strong>
+            {weeklyCompletion}%
+          </strong>
+        </div>
+      </div>
+
+      <div className="dashboard-stats">
+        <div className="hero-stat-card">
+          <div className="hero-stat-icon extinguisher-icon">
+            <Flame size={42} />
+          </div>
+
+          <div>
+            <span>ACTIVE</span>
+
+            <strong>
+              {activeItems.length}
+            </strong>
+          </div>
+        </div>
+
+        <div className="hero-stat-card">
+          <div className="hero-stat-icon qr-stat">
+            <QrCode size={42} />
+          </div>
+
+          <div>
+            <span>
+              ตรวจแล้วสัปดาห์นี้
+            </span>
+
+            <strong>
+              {inspectedThisWeek}
+            </strong>
+          </div>
+        </div>
+
+        <div className="hero-stat-card">
+          <div className="hero-stat-icon pass-stat">
+            OK
+          </div>
+
+          <strong className="hero-pass-number">
+            {passThisWeek}
+          </strong>
+        </div>
+
+        <div className="hero-stat-card">
+          <div className="hero-stat-icon ng-stat">
+            NG
+          </div>
+
+          <strong className="hero-ng-number">
+            {ngThisWeek}
+          </strong>
+        </div>
+      </div>
+    </section>
+
+    <button
+      className="primary-button scan-main home-scan-button"
+      onClick={() =>
+        setPage("scan")
+      }
+    >
+      <QrCode size={30} />
+
       <strong>
-        ตรวจแล้ว {inspectedThisWeek} จุด
+        สแกน QR
       </strong>
 
-      <strong>
-        {weeklyCompletion}%
-      </strong>
-    </div>
-
-  </div>
-
-
-  <div className="dashboard-stats">
-
-    <div className="hero-stat-card">
-      <div className="hero-stat-icon extinguisher-icon">
-        <Flame size={42} />
-      </div>
-
-      <div>
-        <span>
-          ACTIVE
-        </span>
-
-        <strong>
-          {activeItems.length}
-        </strong>
-      </div>
-    </div>
-
-
-    <div className="hero-stat-card">
-      <div className="hero-stat-icon qr-stat">
-        <QrCode size={42} />
-      </div>
-
-      <div>
-        <span>
-          ตรวจแล้วสัปดาห์นี้
-        </span>
-
-        <strong>
-          {inspectedThisWeek}
-        </strong>
-      </div>
-    </div>
-
-
-    <div className="hero-stat-card">
-      <div className="hero-stat-icon pass-stat">
-        OK
-      </div>
-
-      <strong className="hero-pass-number">
-        {passThisWeek}
-      </strong>
-    </div>
-
-
-    <div className="hero-stat-card">
-      <div className="hero-stat-icon ng-stat">
-        NG
-      </div>
-
-      <strong className="hero-ng-number">
-        {ngThisWeek}
-      </strong>
-    </div>
-  </div>
-</section>
-
-            
-<section className="expiry-dashboard-panel">
-
-  <div className="expiry-dashboard-title">
-    <strong>
-      Expiry & Replacement Monitoring
-    </strong>
-
-    <span>
-      ติดตามสถานะถังดับเพลิง
-      อายุการใช้งาน ≤ 120 วัน
-    </span>
-  </div>
-
-
-  <div className="expiry-dashboard-content">
-
-    <div className="expiry-big-card">
       <span>
-        อายุการใช้งาน ≤ 120 วัน
+        เพื่อเริ่มตรวจ
       </span>
+    </button>
 
-      <strong>
-        {expiringSoon}
-      </strong>
-
-      <small>
-        ถัง
-      </small>
-    </div>
-
-
-    <div className="replacement-summary">
-
-      <div className="replacement-title">
-        Replacement status
-      </div>
-
-      <div>
-        <span>
-          Request Replacement
-        </span>
-
+    <section className="expiry-dashboard-panel">
+      <div className="expiry-dashboard-title">
         <strong>
-          {requestReplacement}
+          Expiry & Replacement Monitoring
         </strong>
-      </div>
 
-      <div>
         <span>
-          Procurement
+          ติดตามสถานะถังดับเพลิง
+          อายุการใช้งาน ≤ 120 วัน
         </span>
-
-        <strong>
-          {procurement}
-        </strong>
       </div>
 
-      <div>
-        <span>
-          Replacement
-        </span>
+      <div className="expiry-dashboard-content">
+        <div className="expiry-big-card">
+          <span>
+            อายุการใช้งาน ≤ 120 วัน
+          </span>
 
-        <strong>
-          {replacement}
-        </strong>
+          <strong>
+            {expiringSoon}
+          </strong>
+
+          <small>
+            ถัง
+          </small>
+        </div>
+
+        <div className="replacement-summary">
+          <div className="replacement-title">
+            Replacement status
+          </div>
+
+          <div>
+            <span>
+              Request Replacement
+            </span>
+
+            <strong>
+              {requestReplacement}
+            </strong>
+          </div>
+
+          <div>
+            <span>
+              Procurement
+            </span>
+
+            <strong>
+              {procurement}
+            </strong>
+          </div>
+
+          <div>
+            <span>
+              Replacement
+            </span>
+
+            <strong>
+              {replacement}
+            </strong>
+          </div>
+
+          <div>
+            <span>
+              Verification
+            </span>
+
+            <strong>
+              {verification}
+            </strong>
+          </div>
+        </div>
       </div>
 
-      <div>
-        <span>
-          Verification
-        </span>
+      <button
+        className="expiry-open-button"
+        onClick={() =>
+          setPage("expiry")
+        }
+      >
+        เปิดรายการ Expiry Monitoring
+      </button>
+    </section>
+  </>
+)}
 
-        <strong>
-          {verification}
-        </strong>
-      </div>
-
-    </div>
-
-  </div>
-
-
-  <button
-    className="expiry-open-button"
-    onClick={() =>
-      setPage("expiry")
-    }
-  >
-    เปิดรายการ Expiry Monitoring
-  </button>
-
-</section>
-
-  <div className="summary-row">
-    <span>Expiring within 120 days</span>
-    <strong className="yellow-text">
-      {expiringSoon}
-    </strong>
-  </div>
-
-  <div className="summary-row">
-    <span>Expired</span>
-    <strong className="red-text">
-      {expired}
-    </strong>
-  </div>
-
-  <div className="summary-row">
-    <span>Request Replacement</span>
-    <strong>
-      {requestReplacement}
-    </strong>
-  </div>
-
-  <div className="summary-row">
-    <span>Procurement</span>
-    <strong>
-      {procurement}
-    </strong>
-  </div>
-
-  <div className="summary-row">
-    <span>Replacement</span>
-    <strong>
-      {replacement}
-    </strong>
-  </div>
-
-  <div className="summary-row">
-    <span>Verification</span>
-    <strong>
-      {verification}
-    </strong>
-  </div>
-</div>
-
-            
-            <button
-                className="primary-button scan-main home-scan-button"
-                onClick={() =>
-                setPage("scan")
-                }
-             >
-                <QrCode size={30} />
-
-                <strong>
-                   สแกน QR
-                </strong>
-
-                <span>
-                   เพื่อเริ่มตรวจ
-                </span>
-             </button>
-          </>
-        )}
+{page === "scan" && (
 
         {page === "scan" && (
           <section className="scan-page">
