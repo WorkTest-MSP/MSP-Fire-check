@@ -1465,8 +1465,30 @@ textarea:focus {
   color: #0f172a;
   background: white;
 }
-
-
 .expiry-card .edit-master-button {
   margin-top: 10px;
+}
+
+.replacement-complete-button {
+  width: 100%;
+
+  margin-top: 10px;
+  padding: 12px;
+
+  border: 0;
+  border-radius: 11px;
+
+  font-weight: 700;
+
+  color: white;
+  background: #059669;
+}
+
+.replacement-complete-button:hover {
+  background: #047857;
+}
+
+.replacement-complete-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
