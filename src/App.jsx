@@ -1893,8 +1893,6 @@ useEffect(() => {
   </>
 )}
 
-{page === "scan" && (
-
         {page === "scan" && (
           <section className="scan-page">
             <h1>สแกน QR Code</h1>
