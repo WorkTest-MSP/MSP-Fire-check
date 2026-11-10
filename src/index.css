@@ -56,7 +56,7 @@ textarea:focus {
 .app {
   min-height: 100vh;
   background: #f8fafc;
-  padding-bottom: 110px;
+  padding-bottom: 24px;
 }
 
 .main {
@@ -1110,13 +1110,18 @@ textarea:focus {
 
 .bottom-nav {
   position: fixed;
+  
   left: 50%;
+  right: auto;
+  
   bottom: 16px;
 
   transform: translateX(-50%);
 
   width: calc(100% - 32px);
   max-width: 900px;
+
+  margin: 0;
 
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -1179,16 +1184,23 @@ textarea:focus {
   }
 
   .bottom-nav {
-    right: 50%;
+    left: 0;
+    right: 0;
 
-    width: 600px;
+    bottom: 0;
 
-    transform: translateX(50%);
+    transform: none;
 
-    border-right: 1px solid #e2e8f0;
-    border-left: 1px solid #e2e8f0;
+    width: 100%;
+    max-width: none;
 
-    border-radius: 18px 18px 0 0;
+    margin: 0;
+
+    border-left: 0;
+    border-right: 0;
+    border-bottom: 0;
+
+    border-radius: 16px 16px 0 0;
   }
 }
 
