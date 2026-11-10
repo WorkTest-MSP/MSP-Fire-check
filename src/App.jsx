@@ -1646,28 +1646,46 @@ useEffect(() => {
   </div>
 )}
       <header className="top-header">
-        <div className="header-inner">
-          <div className="brand">
-            <div className="brand-icon">
-              <Flame size={24} />
-            </div>
+  <div className="header-inner">
 
-            <div>
-              <div className="brand-title">
-                Fire Check 70
-              </div>
+    <div className="brand">
+      <div className="brand-icon">
+        <Flame size={26} />
+      </div>
 
-              <div className="brand-subtitle">
-                Fire Extinguisher QR Inspection
-              </div>
-            </div>
-          </div>
-
-          <div className="demo-label">
-             {loading ? "LOADING" : "ONLINE"}
-          </div>
+      <div>
+        <div className="brand-title">
+          FIRE EXTINGUISHER INSPECTION
         </div>
-      </header>
+
+        <div className="brand-subtitle">
+          MSP DEPARTMENT
+        </div>
+      </div>
+    </div>
+
+    <div className="header-right">
+      <div className="header-datetime">
+        {new Date().toLocaleString(
+          "th-TH",
+          {
+            dateStyle: "medium",
+            timeStyle: "short",
+          }
+        )}
+      </div>
+
+      <div className="demo-label">
+        <span className="online-dot" />
+
+        {loading
+          ? "LOADING"
+          : "ONLINE"}
+      </div>
+    </div>
+
+  </div>
+</header>
 
       <main className="main">
         {page === "home" && (
@@ -1682,82 +1700,199 @@ useEffect(() => {
     >
       {syncMessage}
     </div>
-            <section className="hero">
-              <div className="hero-label">
-                FIRE EXTINGUISHER INSPECTION
-              </div>
+            <section className="home-dashboard">
 
-              <h1>
-  ตรวจถังดับเพลิง
-  <br />
-  {items.length} จุด
-</h1>
+  <div className="dashboard-left">
 
-              <p>
-                QR Inspection System
-              </p>
+    <div className="hero-label">
+      FIRE EXTINGUISHER INSPECTION
+    </div>
 
-  <div className="progress">
-  <div
-    className="progress-value"
-    style={{
-      width: `${weeklyCompletion}%`,
-    }}
-  />
-</div>
+    <h1>
+      ตรวจถังดับเพลิง
+      <br />
+      {activeItems.length} จุด
+    </h1>
 
-<div className="hero-summary">
-  <span>
-    ตรวจแล้ว {inspectedThisWeek} จุด
-  </span>
+    <div className="weekly-ratio">
+      Weekly checking ratio
+    </div>
 
- <span>
-    {weeklyCompletion}%
-  </span>
-</div>
-              </section>
+    <div className="progress">
+      <div
+        className="progress-value"
+        style={{
+          width:
+            `${weeklyCompletion}%`,
+        }}
+      />
+    </div>
 
-            <section className="stats-grid">
-              <StatCard
-  title="Active"
-  value={activeItems.length}
-  type="blue"
-  icon={ShieldCheck}
-/>
+    <div className="hero-summary">
+      <strong>
+        ตรวจแล้ว {inspectedThisWeek} จุด
+      </strong>
 
-<StatCard
-  title="ตรวจแล้วสัปดาห์นี้"
-  value={inspectedThisWeek}
-  type="green"
-  icon={CheckCircle2}
-/>
+      <strong>
+        {weeklyCompletion}%
+      </strong>
+    </div>
 
-<StatCard
-  title="รอตรวจสัปดาห์นี้"
-  value={pendingThisWeek}
-  type="yellow"
-  icon={ClipboardCheck}
-/>
-
-<StatCard
-  title="NG สัปดาห์นี้"
-  value={ngThisWeek}
-  type="red"
-  icon={TriangleAlert}
-/>
-  </section>
-<div className="panel">
-  <div className="panel-title">
-    Expiry & Replacement Monitoring
   </div>
+
+
+  <div className="dashboard-stats">
+
+    <div className="hero-stat-card">
+      <div className="hero-stat-icon extinguisher-icon">
+        <Flame size={42} />
+      </div>
+
+      <div>
+        <span>
+          ACTIVE
+        </span>
+
+        <strong>
+          {activeItems.length}
+        </strong>
+      </div>
+    </div>
+
+
+    <div className="hero-stat-card">
+      <div className="hero-stat-icon qr-stat">
+        <QrCode size={42} />
+      </div>
+
+      <div>
+        <span>
+          ตรวจแล้วสัปดาห์นี้
+        </span>
+
+        <strong>
+          {inspectedThisWeek}
+        </strong>
+      </div>
+    </div>
+
+
+    <div className="hero-stat-card">
+      <div className="hero-stat-icon pass-stat">
+        OK
+      </div>
+
+      <strong className="hero-pass-number">
+        {passThisWeek}
+      </strong>
+    </div>
+
+
+    <div className="hero-stat-card">
+      <div className="hero-stat-icon ng-stat">
+        NG
+      </div>
+
+      <strong className="hero-ng-number">
+        {ngThisWeek}
+      </strong>
+    </div>
+  </div>
+</section>
+
+            
+<section className="expiry-dashboard-panel">
+
+  <div className="expiry-dashboard-title">
+    <strong>
+      Expiry & Replacement Monitoring
+    </strong>
+
+    <span>
+      ติดตามสถานะถังดับเพลิง
+      อายุการใช้งาน ≤ 120 วัน
+    </span>
+  </div>
+
+
+  <div className="expiry-dashboard-content">
+
+    <div className="expiry-big-card">
+      <span>
+        อายุการใช้งาน ≤ 120 วัน
+      </span>
+
+      <strong>
+        {expiringSoon}
+      </strong>
+
+      <small>
+        ถัง
+      </small>
+    </div>
+
+
+    <div className="replacement-summary">
+
+      <div className="replacement-title">
+        Replacement status
+      </div>
+
+      <div>
+        <span>
+          Request Replacement
+        </span>
+
+        <strong>
+          {requestReplacement}
+        </strong>
+      </div>
+
+      <div>
+        <span>
+          Procurement
+        </span>
+
+        <strong>
+          {procurement}
+        </strong>
+      </div>
+
+      <div>
+        <span>
+          Replacement
+        </span>
+
+        <strong>
+          {replacement}
+        </strong>
+      </div>
+
+      <div>
+        <span>
+          Verification
+        </span>
+
+        <strong>
+          {verification}
+        </strong>
+      </div>
+
+    </div>
+
+  </div>
+
+
   <button
-  className="expiry-open-button"
-  onClick={() =>
-    setPage("expiry")
-  }
->
-  เปิดรายการ Expiry Monitoring
-</button>
+    className="expiry-open-button"
+    onClick={() =>
+      setPage("expiry")
+    }
+  >
+    เปิดรายการ Expiry Monitoring
+  </button>
+
+</section>
 
   <div className="summary-row">
     <span>Expiring within 120 days</span>
@@ -1804,45 +1939,21 @@ useEffect(() => {
 
             
             <button
-              className="primary-button scan-main"
-              onClick={() =>
+                className="primary-button scan-main home-scan-button"
+                onClick={() =>
                 setPage("scan")
-              }
-            >
-              <QrCode size={22} />
-              สแกน QR เพื่อเริ่มตรวจ
-            </button>
+                }
+             >
+                <QrCode size={30} />
 
-            <section className="panel">
-              <div className="panel-title">
-                สถานะการตรวจ
-              </div>
+                <strong>
+                   สแกน QR
+                </strong>
 
-              <div className="summary-row">
-  <span>PASS This Week</span>
-
-  <strong className="green-text">
-    {passThisWeek}
-  </strong>
-</div>
-
-<div className="summary-row">
-  <span>NG This Week</span>
-
-  <strong className="red-text">
-    {ngThisWeek}
-  </strong>
-</div>
-
-<div className="summary-row">
-  <span>PENDING This Week</span>
-
-  <strong className="yellow-text">
-    {pendingThisWeek}
-  </strong>
-</div>
-            </section>
-            
+                <span>
+                   เพื่อเริ่มตรวจ
+                </span>
+             </button>
           </>
         )}
 
