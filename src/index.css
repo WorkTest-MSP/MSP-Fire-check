@@ -1491,3 +1491,385 @@ textarea:focus {
   cursor: not-allowed;
   opacity: 0.5;
 }
+
+.home-dashboard {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1.1fr)
+    minmax(0, 1.8fr);
+
+  gap: 18px;
+
+  padding: 24px;
+
+  border-radius: 26px;
+
+  color: white;
+
+  background:
+    linear-gradient(
+      135deg,
+      #0f172a,
+      #27364b
+    );
+
+  box-shadow:
+    0 14px 35px
+    rgba(15, 23, 42, 0.16);
+}
+
+
+.dashboard-left {
+  display: flex;
+  flex-direction: column;
+}
+
+
+.dashboard-left h1 {
+  margin: 30px 0 0;
+
+  font-size: 38px;
+  line-height: 1.1;
+}
+
+
+.weekly-ratio {
+  margin-top: auto;
+  margin-bottom: 5px;
+
+  font-size: 14px;
+
+  color: #e2e8f0;
+}
+
+
+.dashboard-stats {
+  display: grid;
+  grid-template-columns:
+    repeat(2, 1fr);
+
+  gap: 12px;
+}
+
+
+.hero-stat-card {
+  min-height: 140px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 14px;
+
+  padding: 18px;
+
+  border-radius: 18px;
+
+  color: #0f172a;
+  background: white;
+}
+
+
+.hero-stat-card > div:last-child {
+  display: flex;
+  flex-direction: column;
+}
+
+
+.hero-stat-card span {
+  font-size: 14px;
+  font-weight: 700;
+
+  color: #737373;
+}
+
+
+.hero-stat-card strong {
+  font-size: 56px;
+  line-height: 1;
+
+  color: #0f3447;
+}
+
+
+.hero-stat-icon {
+  flex: 0 0 auto;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+.extinguisher-icon,
+.qr-stat {
+  width: 65px;
+  height: 65px;
+}
+
+
+.pass-stat,
+.ng-stat {
+  width: 72px;
+  height: 72px;
+
+  border: 4px solid;
+
+  border-radius: 50%;
+
+  font-size: 27px;
+  font-weight: 800;
+}
+
+
+.pass-stat {
+  color: #22c55e;
+  border-color: #22c55e;
+}
+
+
+.ng-stat {
+  color: #ef2020;
+  border-color: #ef2020;
+}
+
+
+.hero-pass-number {
+  color: #00ad55 !important;
+}
+
+
+.hero-ng-number {
+  color: #ff0d0d !important;
+}
+
+.home-scan-button {
+  min-height: 72px;
+
+  margin-top: 14px;
+
+  border-radius: 20px;
+
+  font-size: 22px;
+
+  background: #e52525;
+}
+
+
+.home-scan-button strong {
+  font-size: 22px;
+}
+
+
+.home-scan-button span {
+  font-weight: 400;
+}
+
+.expiry-dashboard-panel {
+  margin-top: 22px;
+  padding: 22px;
+
+  border-radius: 22px;
+
+  background: white;
+}
+
+
+.expiry-dashboard-title {
+  display: flex;
+  align-items: baseline;
+
+  gap: 8px;
+
+  margin-bottom: 18px;
+}
+
+
+.expiry-dashboard-title strong {
+  font-size: 22px;
+}
+
+
+.expiry-dashboard-title span {
+  font-size: 11px;
+
+  color: #334155;
+}
+
+
+.expiry-dashboard-content {
+  display: grid;
+
+  grid-template-columns:
+    250px 1fr;
+
+  gap: 40px;
+
+  align-items: center;
+}
+
+
+.expiry-big-card {
+  min-height: 165px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  border: 2px solid #b56b5e;
+  border-radius: 24px;
+
+  color: #c2410c;
+}
+
+
+.expiry-big-card span {
+  font-size: 16px;
+}
+
+
+.expiry-big-card strong {
+  font-size: 72px;
+  line-height: 1;
+}
+
+
+.expiry-big-card small {
+  font-size: 12px;
+}
+
+
+.replacement-summary {
+  display: flex;
+  flex-direction: column;
+
+  gap: 8px;
+}
+
+
+.replacement-title {
+  margin-bottom: 5px;
+
+  font-size: 18px;
+}
+
+
+.replacement-summary > div:not(
+  .replacement-title
+) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 3px 0;
+}
+
+@media (max-width: 700px) {
+
+  .home-dashboard {
+    grid-template-columns: 1fr;
+
+    padding: 20px;
+  }
+
+
+  .dashboard-left h1 {
+    margin-top: 18px;
+
+    font-size: 31px;
+  }
+
+
+  .weekly-ratio {
+    margin-top: 26px;
+  }
+
+
+  .dashboard-stats {
+    grid-template-columns:
+      repeat(2, 1fr);
+  }
+
+
+  .hero-stat-card {
+    min-height: 105px;
+
+    padding: 12px;
+
+    gap: 8px;
+  }
+
+
+  .hero-stat-card strong {
+    font-size: 38px;
+  }
+
+
+  .hero-stat-icon {
+    transform: scale(0.78);
+  }
+
+
+  .expiry-dashboard-title {
+    display: block;
+  }
+
+
+  .expiry-dashboard-title span {
+    display: block;
+
+    margin-top: 3px;
+  }
+
+
+  .expiry-dashboard-content {
+    grid-template-columns: 1fr;
+
+    gap: 18px;
+  }
+
+
+  .expiry-big-card {
+    min-height: 140px;
+  }
+
+
+  .expiry-big-card strong {
+    font-size: 62px;
+  }
+
+
+  .header-datetime {
+    display: none;
+  }
+
+}
+
+.header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+
+  gap: 6px;
+}
+
+
+.header-datetime {
+  font-size: 11px;
+
+  color: #e2e8f0;
+}
+
+
+.online-dot {
+  display: inline-block;
+
+  width: 7px;
+  height: 7px;
+
+  margin-right: 4px;
+
+  border-radius: 50%;
+
+  background: #22c55e;
+}
