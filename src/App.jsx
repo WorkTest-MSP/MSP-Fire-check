@@ -1485,31 +1485,94 @@ async function deleteMaster(
 
   function findExtinguisher(value) {
   if (!value) {
-    alert("ไม่พบข้อมูลจาก QR Code");
+    alert(
+      "ไม่พบข้อมูลจาก QR Code"
+    );
     return;
   }
 
-  const code = String(value)
-    .trim()
-    .toUpperCase();
+  const code =
+    String(value)
+      .trim()
+      .toUpperCase();
 
-  const item = items.find(
-    (row) =>
-      String(row.code || "")
-        .trim()
-        .toUpperCase() === code
-  );
+  const item =
+    items.find(
+      (row) =>
+        String(
+          row.code || ""
+        )
+          .trim()
+          .toUpperCase() ===
+        code
+    );
 
   if (!item) {
     alert(
       `ไม่พบรหัส ${code} ในทะเบียนถังดับเพลิง`
     );
+
+    return;
+  }
+
+  if (
+    item.status !== "ACTIVE"
+  ) {
+    alert(
+      `${code} มีสถานะ ${item.status}\nไม่สามารถตรวจถังที่ไม่ได้ใช้งาน`
+    );
+
+    return;
+  }
+
+  const latestInspection =
+    getLatestWeeklyInspection(
+      code
+    );
+
+  if (latestInspection) {
+    setDuplicateInspection({
+      item,
+      log: latestInspection,
+    });
+
+    setPage(
+      "inspectionResult"
+    );
+
     return;
   }
 
   openInspection(item);
 }
 
+function confirmRepeatInspection() {
+  if (
+    !duplicateInspection?.item
+  ) {
+    return;
+  }
+
+  const item =
+    duplicateInspection.item;
+
+  setDuplicateInspection(
+    null
+  );
+
+  openInspection(item);
+}
+
+
+function cancelRepeatInspection() {
+  setDuplicateInspection(
+    null
+  );
+
+  setPage("scan");
+}
+
+  
   async function startCamera() {
     if (scannerRunningRef.current) {
       return;
@@ -2981,6 +3044,183 @@ useEffect(() => {
 )}
   </section>
 )}
+
+        {page === "inspectionResult" &&
+  duplicateInspection && (
+  <section className="inspection-result-page">
+
+    <button
+      className="back-button"
+      onClick={
+        cancelRepeatInspection
+      }
+    >
+      ← กลับหน้าสแกน
+    </button>
+
+    <div className="result-warning-card">
+      <div className="result-warning-icon">
+        <History size={32} />
+      </div>
+
+      <div>
+        <h1>
+          ถังนี้ตรวจแล้ว
+        </h1>
+
+        <p>
+          มีผลการตรวจในสัปดาห์ปัจจุบันแล้ว
+        </p>
+      </div>
+    </div>
+
+
+    <div className="result-equipment-card">
+      <div>
+        <span>
+          รหัสถังดับเพลิง
+        </span>
+
+        <strong>
+          {
+            duplicateInspection
+              .item.code
+          }
+        </strong>
+      </div>
+
+      <StatusBadge
+        status={
+          duplicateInspection
+            .log.result
+        }
+      />
+    </div>
+
+
+    <div className="result-detail-card">
+
+      <div className="result-detail-row">
+        <span>
+          Type
+        </span>
+
+        <strong>
+          {
+            duplicateInspection
+              .item.type
+          }
+        </strong>
+      </div>
+
+      <div className="result-detail-row">
+        <span>
+          Size
+        </span>
+
+        <strong>
+          {
+            duplicateInspection
+              .item.size ||
+            "-"
+          }
+        </strong>
+      </div>
+
+      <div className="result-detail-row">
+        <span>
+          Location
+        </span>
+
+        <strong>
+          {
+            duplicateInspection
+              .item.location ||
+            "-"
+          }
+        </strong>
+      </div>
+
+      <div className="result-detail-row">
+        <span>
+          ผู้ตรวจล่าสุด
+        </span>
+
+        <strong>
+          {
+            duplicateInspection
+              .log.inspector ||
+            "-"
+          }
+        </strong>
+      </div>
+
+      <div className="result-detail-row">
+        <span>
+          วันที่และเวลา
+        </span>
+
+        <strong>
+          {new Date(
+            duplicateInspection
+              .log.inspectedAt
+          ).toLocaleString(
+            "th-TH"
+          )}
+        </strong>
+      </div>
+
+      {duplicateInspection
+        .log.note && (
+        <div className="result-note">
+          <span>
+            หมายเหตุ
+          </span>
+
+          <p>
+            {
+              duplicateInspection
+                .log.note
+            }
+          </p>
+        </div>
+      )}
+
+    </div>
+
+
+    <div className="repeat-inspection-warning">
+      หากยืนยันตรวจซ้ำ
+      ระบบจะสร้างประวัติการตรวจใหม่
+      และไม่ลบผลการตรวจครั้งก่อน
+    </div>
+
+
+    <div className="repeat-inspection-actions">
+
+      <button
+        className="secondary-button"
+        onClick={
+          cancelRepeatInspection
+        }
+      >
+        ยกเลิก
+      </button>
+
+      <button
+        className="primary-button"
+        onClick={
+          confirmRepeatInspection
+        }
+      >
+        ยืนยันตรวจซ้ำ
+      </button>
+
+    </div>
+
+  </section>
+)}
+        
         {page === "inspection" && selected && (
           <section className="inspection-page">
             <button
@@ -3224,7 +3464,14 @@ useEffect(() => {
         )}
       </main>
 
-      {!["inspection", "success"].includes(page) && (
+      {![
+          "inspection",
+          "inspectionResult",
+          "historyDetail",
+          "success",
+          "replacementComplete",
+          "masterForm",
+       ].includes(page) && (
         <nav className="bottom-nav">
           <button
             className={
