@@ -2659,3 +2659,65 @@ textarea:focus {
     overflow-wrap: anywhere;
   }
 }
+
+.history-export-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  margin-bottom: 14px;
+}
+
+.history-export-info {
+  font-size: 12px;
+
+  color: #64748b;
+}
+
+.history-download-button {
+  min-height: 42px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  padding: 9px 16px;
+
+  border: 1px solid #0f3447;
+  border-radius: 11px;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  color: white;
+  background: #0f3447;
+}
+
+.history-download-button:hover {
+  background: #176c8c;
+}
+
+.history-download-button:disabled {
+  cursor: not-allowed;
+
+  opacity: 0.45;
+}
+
+/* ========================================
+   HISTORY EXPORT - MOBILE
+======================================== */
+
+@media (max-width: 700px) {
+  .history-export-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .history-download-button {
+    width: 100%;
+  }
+}
