@@ -9,6 +9,7 @@ import {
   Camera,
   CheckCircle2,
   ClipboardCheck,
+  Download,
   Flame,
   History,
   Home,
@@ -1609,6 +1610,182 @@ function openHistoryDetail(
     "historyDetail"
   );
 }
+
+function escapeCsvValue(value) {
+  const text =
+    String(
+      value ?? ""
+    );
+
+  return `"${text.replace(
+    /"/g,
+    '""'
+  )}"`;
+}
+
+  function downloadHistoryCsv() {
+  if (
+    filteredHistory.length === 0
+  ) {
+    alert(
+      "ไม่มีข้อมูลประวัติสำหรับ Download"
+    );
+
+    return;
+  }
+
+  const headers = [
+    "Inspection ID",
+    "Extinguisher Code",
+    "Inspection Date",
+    "Inspection Time",
+    "Inspector",
+    "Result",
+    "Checklist 1",
+    "Checklist 2",
+    "Checklist 3",
+    "Checklist 4",
+    "Checklist 5",
+    "Checklist 6",
+    "Checklist 7",
+    "Checklist 8",
+    "Checklist 9",
+    "Note",
+  ];
+
+  const rows =
+    filteredHistory.map(
+      (log) => {
+        const inspectedDate =
+          new Date(
+            log.inspectedAt
+          );
+
+        const dateText =
+          inspectedDate
+            .toLocaleDateString(
+              "en-GB"
+            );
+
+        const timeText =
+          inspectedDate
+            .toLocaleTimeString(
+              "en-GB",
+              {
+                hour12: false,
+              }
+            );
+
+        const checklist =
+          Array.isArray(
+            log.checklist
+          )
+            ? log.checklist
+            : [];
+
+        return [
+          log.inspectionId,
+          log.extinguisherCode,
+          dateText,
+          timeText,
+          log.inspector,
+          log.result,
+          checklist[0] || "",
+          checklist[1] || "",
+          checklist[2] || "",
+          checklist[3] || "",
+          checklist[4] || "",
+          checklist[5] || "",
+          checklist[6] || "",
+          checklist[7] || "",
+          checklist[8] || "",
+          log.note || "",
+        ];
+      }
+    );
+
+  const csvContent = [
+    headers,
+    ...rows,
+  ]
+    .map((row) =>
+      row
+        .map(escapeCsvValue)
+        .join(",")
+    )
+    .join("\r\n");
+
+  /*
+    UTF-8 BOM
+    ช่วยให้ Excel อ่านภาษาไทย
+    ได้ถูกต้อง
+  */
+  const bom = "\uFEFF";
+
+  const blob =
+    new Blob(
+      [
+        bom +
+        csvContent
+      ],
+      {
+        type:
+          "text/csv;charset=utf-8;",
+      }
+    );
+
+  const url =
+    URL.createObjectURL(
+      blob
+    );
+
+  const link =
+    document.createElement(
+      "a"
+    );
+
+  const today =
+    new Date();
+
+  const yyyy =
+    today.getFullYear();
+
+  const mm =
+    String(
+      today.getMonth() + 1
+    ).padStart(
+      2,
+      "0"
+    );
+
+  const dd =
+    String(
+      today.getDate()
+    ).padStart(
+      2,
+      "0"
+    );
+
+  link.href = url;
+
+  link.download =
+    `Fire_Check_History_${yyyy}-${mm}-${dd}.csv`;
+
+  document.body.appendChild(
+    link
+  );
+
+  link.click();
+
+  document.body.removeChild(
+    link
+  );
+
+  URL.revokeObjectURL(
+    url
+  );
+}
+  
   
   function findExtinguisher(value) {
   if (!value) {
@@ -3653,7 +3830,30 @@ useEffect(() => {
 
     </div>
 
+    <div className="history-export-row">
 
+  <div className="history-export-info">
+    แสดง {filteredHistory.length} รายการ
+  </div>
+
+  <button
+    type="button"
+    className="history-download-button"
+    onClick={
+      downloadHistoryCsv
+    }
+    disabled={
+      filteredHistory.length === 0
+    }
+  >
+    <Download size={18} />
+
+    Download CSV
+  </button>
+
+</div>
+
+    
     {filteredHistory.length ===
     0 ? (
 
