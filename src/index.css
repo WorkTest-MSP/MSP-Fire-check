@@ -2721,3 +2721,45 @@ textarea:focus {
     width: 100%;
   }
 }
+
+/* ========================================
+   MOBILE DATE INPUT FIX
+======================================== */
+
+.form-card input[type="date"] {
+  display: block;
+
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  box-sizing: border-box;
+}
+
+@media (max-width: 700px) {
+  .form-card {
+    width: 100%;
+    max-width: 100%;
+
+    overflow: hidden;
+  }
+
+  .form-card input,
+  .form-card select,
+  .form-card textarea {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+
+    box-sizing: border-box;
+  }
+
+  .form-card input[type="date"] {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+
+    -webkit-appearance: none;
+    appearance: none;
+  }
+}
