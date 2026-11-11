@@ -494,6 +494,97 @@ const weeklyCompletion =
     registryFilter,
     logs,
   ]);
+
+const filteredHistory =
+  useMemo(() => {
+
+    const searchText =
+      historySearch
+        .trim()
+        .toLowerCase();
+
+    const fromDate =
+      historyFrom
+        ? new Date(
+            `${historyFrom}T00:00:00`
+          )
+        : null;
+
+    const toDate =
+      historyTo
+        ? new Date(
+            `${historyTo}T23:59:59.999`
+          )
+        : null;
+
+
+    return [...logs]
+      .filter((log) => {
+
+        const inspectedDate =
+          new Date(
+            log.inspectedAt
+          );
+
+
+        const matchesSearch =
+          !searchText ||
+          [
+            log.extinguisherCode,
+            log.inspector,
+            log.note,
+          ]
+            .join(" ")
+            .toLowerCase()
+            .includes(
+              searchText
+            );
+
+
+        const matchesResult =
+          historyFilter ===
+            "ALL" ||
+          log.result ===
+            historyFilter;
+
+
+        const matchesFrom =
+          !fromDate ||
+          inspectedDate >=
+            fromDate;
+
+
+        const matchesTo =
+          !toDate ||
+          inspectedDate <=
+            toDate;
+
+
+        return (
+          matchesSearch &&
+          matchesResult &&
+          matchesFrom &&
+          matchesTo
+        );
+      })
+
+      .sort(
+        (a, b) =>
+          new Date(
+            b.inspectedAt
+          ) -
+          new Date(
+            a.inspectedAt
+          )
+      );
+
+  }, [
+    logs,
+    historySearch,
+    historyFilter,
+    historyFrom,
+    historyTo,
+  ]);
   
 function mapExtinguisher(row) {
   const code = String(
@@ -1483,6 +1574,42 @@ async function deleteMaster(
   setPage("inspection");
 }
 
+function openHistoryDetail(
+  log
+) {
+  if (!log) {
+    return;
+  }
+
+  const item =
+    items.find(
+      (row) =>
+        String(
+          row.code || ""
+        )
+          .trim()
+          .toUpperCase() ===
+
+        String(
+          log.extinguisherCode ||
+          ""
+        )
+          .trim()
+          .toUpperCase()
+    ) || null;
+
+
+  setSelectedHistory({
+    log,
+    item,
+  });
+
+
+  setPage(
+    "historyDetail"
+  );
+}
+  
   function findExtinguisher(value) {
   if (!value) {
     alert(
@@ -3383,85 +3510,474 @@ useEffect(() => {
         )}
 
         {page === "history" && (
-          <>
-            <div className="page-heading">
-              <div>
-                <h1>
-                  ประวัติการตรวจ
-                </h1>
+  <>
+    <div className="history-page-heading">
 
-                <p>
-                  ประวัติการตรวจจากฐานข้อมูล
-                </p>
-              </div>
+      <div>
+        <h1>
+          ประวัติการตรวจ
+        </h1>
+
+        <p>
+          ประวัติการตรวจจากฐานข้อมูล
+        </p>
+      </div>
+
+
+      <div className="history-date-filters">
+
+        <label>
+          <span>
+            From
+          </span>
+
+          <input
+            type="date"
+            value={historyFrom}
+            onChange={(event) =>
+              setHistoryFrom(
+                event.target.value
+              )
+            }
+          />
+        </label>
+
+
+        <label>
+          <span>
+            To
+          </span>
+
+          <input
+            type="date"
+            value={historyTo}
+            onChange={(event) =>
+              setHistoryTo(
+                event.target.value
+              )
+            }
+          />
+        </label>
+
+      </div>
+
+    </div>
+
+
+    <div className="history-toolbar">
+
+      <div className="history-result-filters">
+
+        {[
+          "ALL",
+          "PASS",
+          "NG",
+        ].map((status) => (
+
+          <button
+            type="button"
+            key={status}
+
+            className={
+              historyFilter ===
+              status
+                ? `history-filter history-filter-${status.toLowerCase()} active`
+                : `history-filter history-filter-${status.toLowerCase()}`
+            }
+
+            onClick={() =>
+              setHistoryFilter(
+                status
+              )
+            }
+          >
+            {status}
+          </button>
+
+        ))}
+
+      </div>
+
+
+      <div className="search-box history-search">
+
+        <Search size={21} />
+
+        <input
+          value={historySearch}
+
+          onChange={(event) =>
+            setHistorySearch(
+              event.target.value
+            )
+          }
+
+          placeholder="ค้นหารหัส, ผู้ตรวจ, หมายเหตุ"
+        />
+
+
+        {(historySearch ||
+          historyFilter !==
+            "ALL" ||
+          historyFrom ||
+          historyTo) && (
+
+          <button
+            type="button"
+            className="clear-registry-filter"
+
+            onClick={() => {
+              setHistorySearch(
+                ""
+              );
+
+              setHistoryFilter(
+                "ALL"
+              );
+
+              setHistoryFrom(
+                ""
+              );
+
+              setHistoryTo(
+                ""
+              );
+            }}
+          >
+            <X size={18} />
+          </button>
+
+        )}
+
+      </div>
+
+    </div>
+
+
+    {filteredHistory.length ===
+    0 ? (
+
+      <div className="empty-state">
+
+        <History size={42} />
+
+        <strong>
+          ไม่พบประวัติการตรวจ
+        </strong>
+
+        <span>
+          กรุณาปรับตัวกรอง
+          หรือช่วงวันที่
+        </span>
+
+      </div>
+
+    ) : (
+
+      <div className="history-list redesigned-history-list">
+
+        {filteredHistory.map(
+          (log) => (
+
+          <button
+            type="button"
+
+            className="history-card history-clickable-card"
+
+            key={
+              log.inspectionId
+            }
+
+            onClick={() =>
+              openHistoryDetail(
+                log
+              )
+            }
+          >
+
+            <div
+              className={
+                log.result ===
+                "PASS"
+                  ? "history-status pass"
+                  : "history-status ng"
+              }
+            >
+
+              {log.result ===
+              "PASS" ? (
+                <CheckCircle2 />
+              ) : (
+                <TriangleAlert />
+              )}
+
             </div>
 
-            {logs.length === 0 ? (
-              <div className="empty-state">
-                <History size={42} />
+
+            <div className="history-info">
+
+              <div className="history-header">
 
                 <strong>
-                  ยังไม่มีประวัติ
+                  {
+                    log.extinguisherCode
+                  }
                 </strong>
 
+                <StatusBadge
+                  status={
+                    log.result
+                  }
+                />
+
+              </div>
+
+
+              <div>
+                ผู้ตรวจ:{" "}
+                {
+                  log.inspector ||
+                  "-"
+                }
+              </div>
+
+
+              <div>
+                {new Date(
+                  log.inspectedAt
+                ).toLocaleString(
+                  "th-TH"
+                )}
+              </div>
+
+
+              {log.note && (
+                <div className="history-note">
+                  {log.note}
+                </div>
+              )}
+
+            </div>
+
+          </button>
+
+        ))}
+
+      </div>
+
+    )}
+
+  </>
+)}
+
+        {page === "historyDetail" &&
+  selectedHistory && (
+  <section className="inspection-page">
+
+    <button
+      className="back-button"
+
+      onClick={() =>
+        setPage("history")
+      }
+    >
+      ← กลับประวัติ
+    </button>
+
+
+    <div className="readonly-banner">
+      ข้อมูลผลการตรวจ
+      แบบอ่านอย่างเดียว
+    </div>
+
+
+    <div className="equipment-header">
+
+      <div>
+
+        <div className="equipment-code">
+          {
+            selectedHistory
+              .log
+              .extinguisherCode
+          }
+        </div>
+
+        <div>
+          {
+            selectedHistory
+              .item?.type ||
+            "-"
+          }
+
+          {" • "}
+
+          {
+            selectedHistory
+              .item?.size ||
+            "-"
+          }
+        </div>
+
+      </div>
+
+
+      <StatusBadge
+        status={
+          selectedHistory
+            .log.result
+        }
+      />
+
+    </div>
+
+
+    <div className="location-line">
+      <MapPin size={17} />
+
+      {
+        selectedHistory
+          .item?.location ||
+        "-"
+      }
+    </div>
+
+
+    <section className="form-card readonly-card">
+
+      <div className="result-detail-row">
+        <span>
+          ผู้ตรวจ
+        </span>
+
+        <strong>
+          {
+            selectedHistory
+              .log.inspector ||
+            "-"
+          }
+        </strong>
+      </div>
+
+
+      <div className="result-detail-row">
+        <span>
+          วันและเวลา
+        </span>
+
+        <strong>
+          {new Date(
+            selectedHistory
+              .log
+              .inspectedAt
+          ).toLocaleString(
+            "th-TH"
+          )}
+        </strong>
+      </div>
+
+
+      <div className="result-detail-row">
+        <span>
+          ผลการตรวจ
+        </span>
+
+        <StatusBadge
+          status={
+            selectedHistory
+              .log.result
+          }
+        />
+      </div>
+
+    </section>
+
+
+    <h2 className="checklist-title">
+      Inspection Checklist
+    </h2>
+
+
+    <div className="checklist readonly-checklist">
+
+      {getChecklistForType(
+        selectedHistory
+          .item?.type
+      ).map(
+        (
+          question,
+          index
+        ) => {
+
+          const answer =
+            selectedHistory
+              .log
+              .checklist?.[
+                index
+              ] ||
+            "-";
+
+          return (
+            <div
+              className="check-card"
+              key={question}
+            >
+
+              <div className="question">
+
                 <span>
-                  ทดลองตรวจถังเพื่อสร้างข้อมูล
+                  {index + 1}.
                 </span>
+
+                {question}
+
               </div>
-            ) : (
-              <div className="history-list">
-                {logs.map((log) => (
-                  <div
-                    className="history-card"
-                    key={log.inspectionId}
-                  >
-                    <div
-                      className={
-                        log.result === "PASS"
-                          ? "history-status pass"
-                          : "history-status ng"
-                      }
-                    >
-                      {log.result === "PASS" ? (
-                        <CheckCircle2 />
-                      ) : (
-                        <TriangleAlert />
-                      )}
-                    </div>
 
-                    <div className="history-info">
-                      <div className="history-header">
-                        <strong>
-                          {log.extinguisherCode}
-                        </strong>
 
-                        <StatusBadge
-                          status={log.result}
-                        />
-                      </div>
-
-                      <div>
-                        ผู้ตรวจ: {log.inspector}
-                      </div>
-
-                      <div>
-                        {new Date(
-                          log.inspectedAt
-                        ).toLocaleString("th-TH")}
-                      </div>
-
-                      {log.note && (
-                        <div className="history-note">
-                          {log.note}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
+              <div
+                className={
+                  answer === "PASS"
+                    ? "readonly-answer pass"
+                    : answer === "NG"
+                    ? "readonly-answer ng"
+                    : "readonly-answer"
+                }
+              >
+                {answer}
               </div>
-            )}
-          </>
-        )}
+
+            </div>
+          );
+        }
+      )}
+
+    </div>
+
+
+    {selectedHistory
+      .log.note && (
+
+      <section className="form-card">
+
+        <label>
+          หมายเหตุ
+        </label>
+
+        <div className="readonly-note">
+          {
+            selectedHistory
+              .log.note
+          }
+        </div>
+
+      </section>
+
+    )}
+
+  </section>
+)}
+
+        
       </main>
 
       {![
