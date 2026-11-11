@@ -123,6 +123,7 @@ export default function App() {
   const [syncMessage, setSyncMessage] = useState ("กำลังโหลดข้อมูล...");
   const [page, setPage] = useState("home");
   const [search, setSearch] = useState("");
+  const [registryFilter,setRegistryFilter] = useState("ALL");
   const [selected, setSelected] = useState(null);
   const [masterMode, setMasterMode] = useState("add");
   const [masterForm, setMasterForm] = useState ({
@@ -333,7 +334,7 @@ const inspectedThisWeek =
 const pendingThisWeek =
   activeItems.length -
   inspectedThisWeek;
-  const latestWeeklyResult = new Map();
+const latestWeeklyResult =new Map();
 
 weeklyLogs.forEach((log) => {
   const code = String(
@@ -342,22 +343,55 @@ weeklyLogs.forEach((log) => {
     .trim()
     .toUpperCase();
 
-  if (!code) {
+  if (!code || !log.inspectedAt) {
     return;
   }
 
-  if (!latestWeeklyResult.has(code)) {
+  const inspectedTime =
+    new Date(
+      log.inspectedAt
+    ).getTime();
+
+  const previous =
+    latestWeeklyResult.get(code);
+
+  if (
+    !previous ||
+    inspectedTime >
+      previous.inspectedTime
+  ) {
     latestWeeklyResult.set(
       code,
-      log.result
+      {
+        result: String(
+          log.result || "PENDING"
+        )
+          .trim()
+          .toUpperCase(),
+
+        inspectedTime,
+      }
     );
   }
 });
 
+  function getWeeklyCheckStatus(code) {
+  const normalizedCode =
+    String(code || "")
+      .trim()
+      .toUpperCase();
+
+  return (
+    latestWeeklyResult.get(
+      normalizedCode
+    )?.result || "PENDING"
+  );
+}
+ 
 const passThisWeek =
   activeItems.filter(
     (item) =>
-      latestWeeklyResult.get(
+      getWeeklyCheckStatus(
         item.code
       ) === "PASS"
   ).length;
@@ -365,7 +399,7 @@ const passThisWeek =
 const ngThisWeek =
   activeItems.filter(
     (item) =>
-      latestWeeklyResult.get(
+      getWeeklyCheckStatus(
         item.code
       ) === "NG"
   ).length;
@@ -380,25 +414,48 @@ const weeklyCompletion =
       )
     : 0;
   
-  const filteredItems = useMemo(() => {
-    const text = search.toLowerCase().trim();
+  const filteredItems =
+  useMemo(() => {
+    const text =
+      search
+        .toLowerCase()
+        .trim();
 
-    if (!text) {
-      return items;
-    }
-
-    return items.filter((item) =>
-      [
+    return items.filter((item) => {
+      const searchText = [
         item.code,
-        item.area,
-        item.location,
         item.type,
+        item.size,
+        item.location,
       ]
         .join(" ")
-        .toLowerCase()
-        .includes(text)
-    );
-  }, [items, search]);
+        .toLowerCase();
+
+      const matchesSearch =
+        !text ||
+        searchText.includes(text);
+
+      const weeklyStatus =
+        getWeeklyCheckStatus(
+          item.code
+        );
+
+      const matchesStatus =
+        registryFilter === "ALL" ||
+        weeklyStatus ===
+          registryFilter;
+
+      return (
+        matchesSearch &&
+        matchesStatus
+      );
+    });
+  }, [
+    items,
+    search,
+    registryFilter,
+    logs,
+  ]);
   
 function mapExtinguisher(row) {
   const code = String(
@@ -1977,91 +2034,152 @@ useEffect(() => {
           </section>
         )}
 
-        {page === "list" && (
-          <>
-            <div className="page-heading">
-              <div>
-                <h1>
-                  ทะเบียนถังดับเพลิง
-                </h1>
+       {page === "list" && (
+  <>
+    <div className="registry-heading">
+      <div>
+        <h1>
+          ทะเบียนถังดับเพลิง
+        </h1>
 
-                <p>
-                  ทั้งหมด {items.length} จุด
-                </p>
-              </div>
-            </div>
-            
+        <p>
+          ทั้งหมด {items.length} จุด
+          {" • "}
+          แสดง {filteredItems.length} จุด
+        </p>
+      </div>
+
+      <button
+        className="registry-add-button"
+        onClick={openAddMaster}
+      >
+        + เพิ่มถังดับเพลิง
+      </button>
+    </div>
+
+
+    <div className="registry-toolbar">
+      <div className="registry-filters">
+        {[
+          "PASS",
+          "PENDING",
+          "NG",
+        ].map((status) => (
+          <button
+            key={status}
+            type="button"
+            className={
+              registryFilter === status
+                ? `registry-filter registry-filter-${status.toLowerCase()} active`
+                : `registry-filter registry-filter-${status.toLowerCase()}`
+            }
+            onClick={() =>
+              setRegistryFilter(
+                registryFilter === status
+                  ? "ALL"
+                  : status
+              )
+            }
+          >
+            {status}
+          </button>
+        ))}
+      </div>
+
+
+      <div className="search-box registry-search">
+        <Search size={21} />
+
+        <input
+          value={search}
+          onChange={(event) =>
+            setSearch(
+              event.target.value
+            )
+          }
+          placeholder="ค้นหารหัส, Type, Size, Location"
+        />
+
+        {(search ||
+          registryFilter !== "ALL") && (
+          <button
+            type="button"
+            className="clear-registry-filter"
+            onClick={() => {
+              setSearch("");
+              setRegistryFilter("ALL");
+            }}
+          >
+            <X size={18} />
+          </button>
+        )}
+      </div>
+    </div>
+
+
+    <div className="item-list registry-list">
+      {filteredItems.length === 0 ? (
+        <div className="empty-state">
+          <Search size={42} />
+
+          <strong>
+            ไม่พบรายการ
+          </strong>
+
+          <span>
+            กรุณาตรวจสอบคำค้นหา
+            หรือเลือก Filter ใหม่
+          </span>
+        </div>
+      ) : (
+        filteredItems.map((item) => {
+          const weeklyStatus =
+            getWeeklyCheckStatus(
+              item.code
+            );
+
+          return (
             <button
-                  className="primary-button"
-                  onClick={openAddMaster}
-                  style={{
-                    marginBottom: "14px",
-                  }}
+              type="button"
+              className="registry-card"
+              key={item.code}
+              onClick={() =>
+                openEditMaster(item)
+              }
             >
-              + เพิ่มถังดับเพลิง
-            </button>
-            
-            <div className="search-box">
-              <Search size={19} />
+              <div className="registry-fire-icon">
+                <Flame size={22} />
+              </div>
 
-              <input
-                value={search}
-                onChange={(event) =>
-                  setSearch(event.target.value)
-                }
-                placeholder="ค้นหา FE-001, Area, Location"
-              />
-            </div>
+              <div className="registry-item-info">
+                <strong>
+                  {item.code}
+                </strong>
 
-            <div className="item-list">
-              {filteredItems.map((item) => (
-                <div
-                     className="extinguisher-card"
-                     key={item.code}
-                >
-                    <button
-                      className="extinguisher-main"
-                      onClick={() =>
-                      openInspection(item)
-                      }
-                    >
-                    <div className="fire-icon">
-                    <Flame size={22} />
-               </div>
+                <span>
+                  {item.type}
+                  {item.size
+                    ? ` • ${item.size}`
+                    : ""}
+                </span>
 
-               <div className="item-info">
-                 <strong>
-                     {item.code}
-                 </strong>
+                <span>
+                  <MapPin size={14} />
 
-                 <span>
-                     {item.type} • {item.size}
-                 </span>
-
-                 <span>
-                     <MapPin size={13} />
-                     {item.location}
+                  {item.location || "-"}
                 </span>
               </div>
 
               <StatusBadge
-                status={item.lastResult}
+                status={weeklyStatus}
               />
-              </button>
-
-             <button
-                  className="edit-master-button"
-                  onClick={() =>
-                  openEditMaster(item)
-                  }
-             >
-                แก้ไข
-             </button>
-              </div>
-              ))}
-            </div>
-          </>
-        )}
+            </button>
+          );
+        })
+      )}
+    </div>
+  </>
+)}
 
         {page === "expiry" && (
   <section className="inspection-page">
@@ -2278,23 +2396,12 @@ useEffect(() => {
                       Complete Replacement
                  </button>
                  )}
-
-                <button
-                  className="edit-master-button"
-                  onClick={() =>
-                    openEditMaster(item)
-                  }
-                  disabled={saving}
-                >
-                  เปิด Master
-                </button>
               </div>
             );
           }
         )
       )}
     </div>
-
   </section>
 )}
 
