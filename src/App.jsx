@@ -125,6 +125,12 @@ export default function App() {
   const [search, setSearch] = useState("");
   const [registryFilter,setRegistryFilter] = useState("ALL");
   const [selected, setSelected] = useState(null);
+  const [selectedHistory,setSelectedHistory] = useState(null);
+  const [duplicateInspection,setDuplicateInspection] = useState(null);
+  const [historySearch,setHistorySearch] = useState("");
+  const [historyFilter,setHistoryFilter] = useState("ALL");
+  const [historyFrom,setHistoryFrom] = useState("");
+  const [historyTo,setHistoryTo] = useState("");
   const [masterMode, setMasterMode] = useState("add");
   const [masterForm, setMasterForm] = useState ({
     code: "",
@@ -334,7 +340,8 @@ const inspectedThisWeek =
 const pendingThisWeek =
   activeItems.length -
   inspectedThisWeek;
-const latestWeeklyResult =new Map();
+const latestWeeklyInspection =
+  new Map();
 
 weeklyLogs.forEach((log) => {
   const code = String(
@@ -343,7 +350,10 @@ weeklyLogs.forEach((log) => {
     .trim()
     .toUpperCase();
 
-  if (!code || !log.inspectedAt) {
+  if (
+    !code ||
+    !log.inspectedAt
+  ) {
     return;
   }
 
@@ -352,39 +362,67 @@ weeklyLogs.forEach((log) => {
       log.inspectedAt
     ).getTime();
 
+  if (
+    Number.isNaN(
+      inspectedTime
+    )
+  ) {
+    return;
+  }
+
   const previous =
-    latestWeeklyResult.get(code);
+    latestWeeklyInspection.get(
+      code
+    );
 
   if (
     !previous ||
     inspectedTime >
       previous.inspectedTime
   ) {
-    latestWeeklyResult.set(
+    latestWeeklyInspection.set(
       code,
       {
+        ...log,
+
+        inspectedTime,
+
         result: String(
-          log.result || "PENDING"
+          log.result ||
+          "PENDING"
         )
           .trim()
           .toUpperCase(),
-
-        inspectedTime,
       }
     );
   }
 });
 
-  function getWeeklyCheckStatus(code) {
+
+function getLatestWeeklyInspection(
+  code
+) {
   const normalizedCode =
     String(code || "")
       .trim()
       .toUpperCase();
 
   return (
-    latestWeeklyResult.get(
+    latestWeeklyInspection.get(
       normalizedCode
-    )?.result || "PENDING"
+    ) || null
+  );
+}
+
+
+function getWeeklyCheckStatus(
+  code
+) {
+  return (
+    getLatestWeeklyInspection(
+      code
+    )?.result ||
+    "PENDING"
   );
 }
  
