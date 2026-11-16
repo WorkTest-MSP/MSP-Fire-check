@@ -133,13 +133,20 @@ export default function App() {
   const [historyFrom,setHistoryFrom] = useState("");
   const [historyTo,setHistoryTo] = useState("");
   const [masterMode, setMasterMode] = useState("add");
-  const [masterForm, setMasterForm] = useState ({
+  const [masterForm, setMasterForm] =
+  useState({
     code: "",
     type: "Dry Chemical",
     size: "",
+
+    area: "",
     location: "",
+    kumi: "",
+    responsible: "",
+
     manufactureDate: "",
     expiryDate: "",
+
     status: "ACTIVE",
     replacementStatus: "NONE",
   });
@@ -608,39 +615,87 @@ function mapExtinguisher(row) {
     type: rawType,
 
     size: String(
-      row.Size ?? ""
+      row.Size ??
+      row.size ??
+      ""
+    ).trim(),
+
+    area: String(
+      row.Area ??
+      row.area ??
+      ""
     ).trim(),
 
     location: String(
-      row.Location ?? ""
+      row.Location ??
+      row.location ??
+      ""
+    ).trim(),
+
+    kumi: String(
+      row.KUMI ??
+      row.Kumi ??
+      row.kumi ??
+      "UNASSIGNED"
+    ).trim(),
+
+    responsible: String(
+      row.Responsible ??
+      row.responsible ??
+      ""
     ).trim(),
 
     manufactureDate:
-      row.ManufactureDate || null,
+      row.ManufactureDate ??
+      row.manufactureDate ??
+      null,
 
     expiryDate:
-      row.ExpiryDate || null,
+      row.ExpiryDate ??
+      row.expiryDate ??
+      null,
 
     status: String(
-      row.Status ?? "ACTIVE"
+      row.Status ??
+      row.status ??
+      "ACTIVE"
     )
       .trim()
       .toUpperCase(),
 
     replacementStatus: String(
-      row.ReplacementStatus ?? "NONE"
+      row.ReplacementStatus ??
+      row.replacementStatus ??
+      "NONE"
     ).trim(),
 
     lastResult: String(
-      row.LastResult ?? "PENDING"
+      row.LastResult ??
+      row.lastResult ??
+      "PENDING"
     )
       .trim()
       .toUpperCase(),
 
     lastInspection:
-      row.LastInspection || null,
+      row.LastInspection ??
+      row.lastInspection ??
+      null,
+
+    replacedBy: String(
+      row.ReplacedBy ??
+      row.replacedBy ??
+      ""
+    ).trim(),
+
+    replaces: String(
+      row.Replaces ??
+      row.replaces ??
+      ""
+    ).trim(),
   };
 }
+
 
 function getExpiryInfo(expiryDate) {
   if (!expiryDate) {
@@ -837,9 +892,15 @@ function openAddMaster() {
     code: "",
     type: "Dry Chemical",
     size: "",
+
+    area: "",
     location: "",
+    kumi: "",
+    responsible: "",
+    
     manufactureDate: "",
     expiryDate: "",
+    
     status: "ACTIVE",
     replacementStatus: "NONE",
   });
@@ -859,9 +920,18 @@ function openAddMaster() {
     size:
       item.size || "",
 
+    area:
+      item.area || "",
+
     location:
       item.location || "",
 
+    kumi:
+      item.kumi || "",
+
+    responsible:
+    item.responsible || "",
+    
     manufactureDate:
       item.manufactureDate
         ? String(
@@ -909,10 +979,19 @@ function openAddMaster() {
   const type =
     masterForm.type.trim();
 
+  const area =
+    masterForm.area.trim();
+    
   const location =
     masterForm.location.trim();
 
+  const kumi =
+    masterForm.kumi.trim();
 
+  const responsible =
+  masterForm.responsible.trim();
+
+    
   // 1. Validation
   if (!code) {
     alert(
@@ -928,12 +1007,34 @@ function openAddMaster() {
     return;
   }
 
+  if (!area) {
+  alert(
+    "กรุณากรอก Area"
+  );
+  return;
+}
+
   if (!location) {
     alert(
       "กรุณากรอกตำแหน่งติดตั้ง"
     );
     return;
   }
+
+  if (!kumi) {
+  alert(
+    "กรุณาระบุ KUMI"
+  );
+  return;
+}
+
+  if (!responsible) {
+  alert(
+    "กรุณาระบุผู้รับผิดชอบ"
+  );
+  return;
+}
+    
 
   if (!masterForm.expiryDate) {
     alert(
@@ -956,8 +1057,14 @@ function openAddMaster() {
     size:
       masterForm.size.trim(),
 
+    area,
+
     location,
 
+    kumi,
+
+    responsible,
+    
     manufactureDate:
       masterForm.manufactureDate,
 
@@ -2570,9 +2677,20 @@ useEffect(() => {
 
                 <span>
                   <MapPin size={14} />
-
+                  {item.area || "-"}
+                  {" • "}
                   {item.location || "-"}
                 </span>
+                
+                <span>
+                  KUMI: {" "}
+                  {item.kumi || "-"}
+                </span>
+
+                 <span>
+                  ผู้รับผิดชอบ:{" "}
+                  {item.responsible || "-"}
+                 </span>
               </div>
 
               <StatusBadge
@@ -2923,7 +3041,7 @@ useEffect(() => {
             event.target.value
           )
         }
-        placeholder="เช่น 10 lb"
+        placeholder="เช่น 15 LB"
       />
     </section>
 
@@ -3133,10 +3251,30 @@ useEffect(() => {
             event.target.value
           )
         }
-        placeholder="เช่น 10 lb, 10 kg"
+        placeholder="เช่น 15 LB, 10 kg"
       />
     </section>
 
+      <section className="form-card">
+       <label>
+         Area *
+       </label>
+
+       <input
+          value={
+            masterForm.area
+          }
+         onChange={(event) =>
+           updateMasterField(
+              "area",
+           event.target.value
+          )
+         }
+    placeholder="เช่น FLP Sorting"
+  />
+</section>
+
+    
     <section className="form-card">
       <label>
         ตำแหน่งติดตั้ง *
@@ -3150,10 +3288,49 @@ useEffect(() => {
             event.target.value
           )
         }
-        placeholder="เช่น Packing Line A"
+        placeholder="เช่น เสา C5, เสา Sorting FLP"
       />
     </section>
 
+       <section className="form-card">
+         <label>
+           KUMI *
+         </label>
+
+       <input
+         value={
+         masterForm.kumi
+        }
+    onChange={(event) =>
+      updateMasterField(
+        "kumi",
+        event.target.value
+      )
+    }
+    placeholder="เช่น Packing FLP"
+  />
+</section>
+
+    <section className="form-card">
+  <label>
+    ผู้รับผิดชอบ *
+  </label>
+
+  <input
+    value={
+      masterForm.responsible
+    }
+    onChange={(event) =>
+      updateMasterField(
+        "responsible",
+        event.target.value
+      )
+    }
+    placeholder="ชื่อผู้รับผิดชอบ"
+  />
+</section>
+
+    
     <section className="form-card">
       <label>
         วันที่ผลิต
@@ -3551,9 +3728,29 @@ useEffect(() => {
             </div>
 
             <div className="location-line">
-              <MapPin size={17} />
-              {selected.location}
-            </div>
+               <MapPin size={17} />
+
+            <div>
+                <strong>
+                  {selected.area || "-"}
+               </strong>
+
+           <span>
+               จุดติดตั้ง:{" "}
+               {selected.location || "-"}
+           </span>
+
+           <span>
+               KUMI:{" "}
+               {selected.kumi || "-"}
+           </span>
+
+           <span>
+               ผู้รับผิดชอบ:{" "}
+               {selected.responsible || "-"}
+           </span>
+        </div>
+       </div>
 
             <section className="form-card">
               <label>
