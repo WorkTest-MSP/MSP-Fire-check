@@ -2017,12 +2017,9 @@ function escapeCsvValue(value) {
   setPage("directQrResult");
 }
   
-function extractExtinguisherCode(
-  value
-) {
+function extractExtinguisherCode(value) {
   const raw =
-    String(value || "")
-      .trim();
+    String(value || "").trim();
 
   if (!raw) {
     return "";
@@ -2038,13 +2035,27 @@ function extractExtinguisherCode(
       );
 
     if (code) {
-      return String(code)
+      return decodeURIComponent(
+        code
+      )
         .trim()
         .toUpperCase();
     }
-
   } catch {
-    // ไม่ใช่ URL
+    // QR เดิมที่มีเฉพาะ FEG-xx
+  }
+
+  const codeMatch =
+    raw.match(
+      /[?&]code=([^&#]+)/i
+    );
+
+  if (codeMatch?.[1]) {
+    return decodeURIComponent(
+      codeMatch[1]
+    )
+      .trim()
+      .toUpperCase();
   }
 
   return raw
@@ -2077,7 +2088,7 @@ function extractExtinguisherCode(
 
   if (!item) {
     alert(
-      `ไม่พบรหัส ${code} ในทะเบียนถังดับเพลิง`
+      `ไม่พบรหัส ${code} || "UNKNOWN"} ในทะเบียนถังดับเพลิง`
     );
 
     return;
