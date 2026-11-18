@@ -1716,6 +1716,14 @@ async function deleteMaster(
     return;
   }
 
+    if (
+  item.status !== "ACTIVE"
+) {
+  alert(
+    `${item.code} มีสถานะ ${item.status}\nไม่สามารถตรวจถังที่ไม่ได้ใช้งาน`
+  );
+  return;
+}
   const checklist =
     getChecklistForType(item.type);
 
@@ -1803,15 +1811,15 @@ function escapeCsvValue(value) {
     "Inspection Time",
     "Inspector",
     "Result",
-    "Checklist 1",
-    "Checklist 2",
-    "Checklist 3",
-    "Checklist 4",
-    "Checklist 5",
-    "Checklist 6",
-    "Checklist 7",
-    "Checklist 8",
-    "Checklist 9",
+    "ถังอยู่ในตำแหน่งที่กำหนดและมีป้ายชี้บ่ง",
+    "ตัวถังไม่มีรอยบุบ สนิม หรือการชำรุด",
+    "เข็มเกจวัดแรงดันอยู่ในโซนเขียว / น้ำหนักอยู่ในเกณฑ์",
+    "สลักนิรภัยและซีลอยู่ในสภาพสมบูรณ์",
+    "สายฉีดและหัวฉีดไม่แตก อุดตัน หรือผุกร่อน",
+    "ไม่มีสิ่งกีดขวางและเข้าถึงได้ง่าย",
+    "ฉลากและวิธีการใช้มองเห็นและอ่านได้ชัดเจน",
+    "ขายึดหรือตู้เก็บอยู่ในสภาพพร้อมใช้งาน",
+    "ไม่พบความผิดปกติอื่นที่กระทบต่อการใช้งาน",
     "Note",
   ];
 
