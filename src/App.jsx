@@ -155,7 +155,12 @@ export default function App() {
     newCode: "",
     type: "Dry Chemical",
     size: "",
+
+    area: "",
     location: "",
+    kumi: "",
+    responsible: "",
+    
     manufactureDate: "",
     expiryDate: "",
   });
@@ -472,7 +477,10 @@ const weeklyCompletion =
         item.code,
         item.type,
         item.size,
+        item.area,
         item.location,
+        item.kumi,
+        item.responsible,
       ]
         .join(" ")
         .toLowerCase();
@@ -1350,8 +1358,17 @@ async function changeReplacementStatus(
     size:
       item.size || "",
 
+    area:
+      item.area || "",
+
     location:
       item.location || "",
+
+    kumi:
+      item.kumi || "",
+
+    responsible:
+       item.responsible || "",
 
     manufactureDate: "",
 
@@ -1407,6 +1424,14 @@ function updateReplacementField(
   }
 
   if (
+    !replacementForm.area.trim()
+  ) {
+     alert(
+    "กรุณากรอก Area ของถังใหม่");
+  return;
+   }
+   
+  if (
     !replacementForm.location.trim()
   ) {
     alert(
@@ -1414,6 +1439,24 @@ function updateReplacementField(
     );
     return;
   }
+if (
+  !replacementForm.kumi.trim()
+) {
+  alert(
+    "กรุณาระบุ KUMI ของถังใหม่"
+  );
+  return;
+}
+
+if (
+  !replacementForm.responsible.trim()
+) {
+  alert(
+    "กรุณาระบุผู้รับผิดชอบถังใหม่"
+  );
+  return;
+}
+   
 
   if (
     !replacementForm.manufactureDate
@@ -1497,8 +1540,18 @@ function updateReplacementField(
             size:
               replacementForm.size,
 
+            area:
+              replacementForm.area.trim(),
+
             location:
               replacementForm.location,
+
+            kumi:
+               replacementForm.kumi.trim(),
+
+            responsible:
+               replacementForm.responsible.trim(),
+            
 
             manufactureDate:
               replacementForm
@@ -2609,7 +2662,7 @@ useEffect(() => {
               event.target.value
             )
           }
-          placeholder="ค้นหารหัส, Type, Size, Location"
+          placeholder="ค้นหารหัส, Type, Size, Area, Location, KUMI, ผู้รับผิดชอบ"
         />
 
         {(search ||
@@ -3046,24 +3099,73 @@ useEffect(() => {
     </section>
 
     <section className="form-card">
-      <label>
-        Location *
-      </label>
+  <label>
+    Area *
+  </label>
 
-      <input
-        value={
-          replacementForm.location
-        }
-        onChange={(event) =>
-          updateReplacementField(
-            "location",
-            event.target.value
-          )
-        }
-        placeholder="ตำแหน่งติดตั้งถังใหม่"
-      />
-    </section>
+  <input
+    value={replacementForm.area}
+    onChange={(event) =>
+      updateReplacementField(
+        "area",
+        event.target.value
+      )
+    }
+    placeholder="เช่น FLP Sorting"
+  />
+</section>
 
+    <section className="form-card">
+  <label>
+    จุดติดตั้ง *
+  </label>
+
+  <input
+    value={replacementForm.location}
+    onChange={(event) =>
+      updateReplacementField(
+        "location",
+        event.target.value
+      )
+    }
+    placeholder="เช่น เสา E5"
+  />
+</section>
+
+    <section className="form-card">
+  <label>
+    KUMI *
+  </label>
+
+  <input
+    value={replacementForm.kumi}
+    onChange={(event) =>
+      updateReplacementField(
+        "kumi",
+        event.target.value
+      )
+    }
+    placeholder="เช่น Packing FLP"
+  />
+</section>
+
+    <section className="form-card">
+  <label>
+    ผู้รับผิดชอบ *
+  </label>
+
+  <input
+    value={replacementForm.responsible}
+    onChange={(event) =>
+      updateReplacementField(
+        "responsible",
+        event.target.value
+      )
+    }
+    placeholder="ชื่อผู้รับผิดชอบ"
+  />
+</section>
+    
     <section className="form-card">
       <label>
         Manufacture Date *
@@ -3298,9 +3400,7 @@ useEffect(() => {
          </label>
 
        <input
-         value={
-         masterForm.kumi
-        }
+         value={masterForm.kumi}
     onChange={(event) =>
       updateMasterField(
         "kumi",
@@ -3317,9 +3417,7 @@ useEffect(() => {
   </label>
 
   <input
-    value={
-      masterForm.responsible
-    }
+    value={masterForm.responsible}
     onChange={(event) =>
       updateMasterField(
         "responsible",
@@ -3609,6 +3707,15 @@ useEffect(() => {
       </div>
 
       <div className="result-detail-row">
+  <span>Area</span>
+
+  <strong>
+    {duplicateInspection.item.area || "-"}
+  </strong>
+</div>
+
+      
+      <div className="result-detail-row">
         <span>
           Location
         </span>
@@ -3622,6 +3729,22 @@ useEffect(() => {
         </strong>
       </div>
 
+      <div className="result-detail-row">
+  <span>KUMI</span>
+
+  <strong>
+    {duplicateInspection.item.kumi || "-"}
+  </strong>
+</div>
+
+<div className="result-detail-row">
+  <span>ผู้รับผิดชอบ</span>
+
+  <strong>
+    {duplicateInspection.item.responsible || "-"}
+  </strong>
+</div>
+      
       <div className="result-detail-row">
         <span>
           ผู้ตรวจล่าสุด
@@ -4230,14 +4353,29 @@ useEffect(() => {
 
 
     <div className="location-line">
-      <MapPin size={17} />
+  <MapPin size={17} />
 
-      {
-        selectedHistory
-          .item?.location ||
-        "-"
-      }
-    </div>
+  <div>
+    <strong>
+      {selectedHistory.item?.area || "-"}
+    </strong>
+
+    <span>
+      จุดติดตั้ง:{" "}
+      {selectedHistory.item?.location || "-"}
+    </span>
+
+    <span>
+      KUMI:{" "}
+      {selectedHistory.item?.kumi || "-"}
+    </span>
+
+    <span>
+      ผู้รับผิดชอบ:{" "}
+      {selectedHistory.item?.responsible || "-"}
+    </span>
+  </div>
+</div>
 
 
     <section className="form-card readonly-card">
