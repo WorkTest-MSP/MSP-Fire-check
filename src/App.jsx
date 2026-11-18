@@ -122,7 +122,17 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [syncMessage, setSyncMessage] = useState ("กำลังโหลดข้อมูล...");
-  const [page, setPage] = useState("home");
+  const [page, setPage] = useState(() => {
+  const params =
+    new URLSearchParams(
+      window.location.search
+    );
+
+  return params.get("code")
+    ? "directQrLoading"
+    : "home";
+});
+
   const [search, setSearch] = useState("");
   const [registryFilter,setRegistryFilter] = useState("ALL");
   const [selected, setSelected] = useState(null);
@@ -2439,6 +2449,21 @@ useEffect(() => {
 </header>
 
       <main className="main">
+        {page === "directQrLoading" && (
+  <section className="direct-qr-loading">
+
+    <div className="saving-spinner" />
+
+    <strong>
+      กำลังตรวจสอบข้อมูลถังดับเพลิง
+    </strong>
+
+    <span>
+      กรุณารอสักครู่...
+    </span>
+
+  </section>
+)}
         {page === "home" && (
   <>
     <div
@@ -4932,6 +4957,7 @@ useEffect(() => {
       {![
           "inspection",
           "inspectionResult",
+          "directQrLoading",
           "directQrResult",
           "historyDetail",
           "success",
