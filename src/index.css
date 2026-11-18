@@ -2783,3 +2783,140 @@ textarea:focus {
     appearance: none;
   }
 }
+
+/* ========================================
+   DIRECT QR STATUS
+======================================== */
+
+.direct-qr-page {
+  width: 100%;
+  max-width: 620px;
+
+  margin: 0 auto;
+}
+
+.direct-qr-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  padding: 20px;
+
+  border-radius: 18px;
+
+  color: white;
+  background: #0f172a;
+}
+
+.direct-qr-heading span {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+
+  color: #94a3b8;
+}
+
+.direct-qr-heading h1 {
+  margin: 3px 0 0;
+
+  font-size: 30px;
+}
+
+.direct-qr-equipment,
+.direct-qr-last-result {
+  margin-top: 14px;
+  padding: 16px;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+
+  background: white;
+}
+
+.direct-status-message {
+  display: flex;
+  align-items: center;
+
+  gap: 13px;
+
+  margin-top: 14px;
+  padding: 16px;
+
+  border-radius: 14px;
+}
+
+.direct-status-message > div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.direct-status-message strong {
+  font-size: 14px;
+}
+
+.direct-status-message span {
+  font-size: 11px;
+}
+
+.direct-status-message.pass {
+  color: #047857;
+  background: #d1fae5;
+}
+
+.direct-status-message.ng {
+  color: #b91c1c;
+  background: #fee2e2;
+}
+
+.direct-status-message.pending {
+  color: #92400e;
+  background: #fef3c7;
+}
+
+.direct-qr-pending .primary-button,
+.direct-qr-completed .secondary-button {
+  width: 100%;
+
+  margin-top: 14px;
+}
+
+.direct-qr-not-found {
+  padding: 30px 20px;
+
+  border: 1px solid #fecaca;
+  border-radius: 18px;
+
+  text-align: center;
+
+  color: #991b1b;
+  background: #fef2f2;
+}
+
+.direct-qr-not-found h1 {
+  margin: 12px 0 5px;
+}
+
+@media (max-width: 700px) {
+
+  .direct-qr-page {
+    max-width: 100%;
+  }
+
+  .direct-qr-heading {
+    padding: 16px;
+  }
+
+  .direct-qr-heading h1 {
+    font-size: 25px;
+  }
+
+  .direct-qr-equipment,
+  .direct-qr-last-result {
+    padding: 14px;
+  }
+
+}
