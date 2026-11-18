@@ -2713,57 +2713,94 @@ useEffect(() => {
         key={group.kumi}
       >
 
-        <strong className="kumi-name">
-          {group.kumi}
-        </strong>
+      <strong className="kumi-name">
+  {group.kumi}
+</strong>
 
 
-        <span>
-          {group.total}
-        </span>
+<div className="kumi-mobile-percent">
+  {group.progress}%
+</div>
 
 
-        <span>
-          {group.checked}
-        </span>
+<div className="kumi-metric">
+  <span className="kumi-mobile-label">
+    TOTAL
+  </span>
+
+  <strong>
+    {group.total}
+  </strong>
+</div>
 
 
-        <span className="kumi-pass">
-          {group.pass}
-        </span>
+<div className="kumi-metric">
+  <span className="kumi-mobile-label">
+    CHECKED
+  </span>
+
+  <strong>
+    {group.checked}
+  </strong>
+</div>
 
 
-        <span className="kumi-pending">
-          {group.pending}
-        </span>
+<div className="kumi-metric kumi-pass">
+  <span className="kumi-mobile-label">
+    PASS
+  </span>
+
+  <strong>
+    {group.pass}
+  </strong>
+</div>
 
 
-        <span className="kumi-ng">
-          {group.ng}
-        </span>
+<div className="kumi-metric kumi-pending">
+  <span className="kumi-mobile-label">
+    PENDING
+  </span>
+
+  <strong>
+    {group.pending}
+  </strong>
+</div>
 
 
-        <div className="kumi-progress-cell">
+<div className="kumi-metric kumi-ng">
+  <span className="kumi-mobile-label">
+    NG
+  </span>
 
-          <div className="kumi-progress">
-            <div
-              className={
-                group.progress === 100
-                  ? "kumi-progress-value complete"
-                  : "kumi-progress-value"
-              }
-              style={{
-                width:
-                  `${group.progress}%`,
-              }}
-            />
-          </div>
+  <strong>
+    {group.ng}
+  </strong>
+</div>
 
-          <strong>
-            {group.progress}%
-          </strong>
 
-        </div>
+<div className="kumi-progress-cell">
+
+  <div className="kumi-progress">
+
+    <div
+      className={
+        group.progress === 100
+          ? "kumi-progress-value complete"
+          : "kumi-progress-value"
+      }
+      style={{
+        width:
+          `${group.progress}%`,
+      }}
+    />
+
+  </div>
+
+  <strong>
+    {group.progress}%
+  </strong>
+
+</div>
 
       </div>
 
