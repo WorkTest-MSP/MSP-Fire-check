@@ -2948,3 +2948,444 @@ textarea:focus {
   color: #64748b;
 }
 
+/* ========================================
+   WEEKLY MONITORING BY KUMI
+======================================== */
+
+.kumi-monitoring-panel {
+  margin-top: 20px;
+  padding: 20px;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+
+  background: white;
+}
+
+.kumi-monitoring-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  margin-bottom: 18px;
+}
+
+.kumi-monitoring-heading > div:first-child {
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+}
+
+.kumi-monitoring-heading strong {
+  color: #0f172a;
+
+  font-size: 16px;
+}
+
+.kumi-monitoring-heading span {
+  color: #64748b;
+
+  font-size: 11px;
+}
+
+.kumi-monitoring-legend {
+  display: flex;
+
+  gap: 7px;
+}
+
+.kumi-monitoring-legend span {
+  padding: 5px 9px;
+
+  border-radius: 999px;
+
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.legend-pass {
+  color: #047857 !important;
+  background: #d1fae5;
+}
+
+.legend-pending {
+  color: #92400e !important;
+  background: #fef3c7;
+}
+
+.legend-ng {
+  color: #b91c1c !important;
+  background: #fee2e2;
+}
+
+.kumi-monitoring-table {
+  overflow: hidden;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+}
+
+.kumi-monitoring-header,
+.kumi-monitoring-row {
+  display: grid;
+
+  grid-template-columns:
+    minmax(150px, 1.6fr)
+    repeat(5, minmax(65px, 0.65fr))
+    minmax(160px, 1.4fr);
+
+  align-items: center;
+
+  gap: 8px;
+}
+
+.kumi-monitoring-header {
+  padding: 10px 14px;
+
+  color: white;
+  background: #0f3447;
+}
+
+.kumi-monitoring-header span {
+  font-size: 10px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.kumi-monitoring-header span:first-child {
+  text-align: left;
+}
+
+.kumi-monitoring-row {
+  min-height: 58px;
+
+  padding: 10px 14px;
+
+  border-bottom:
+    1px solid #f1f5f9;
+}
+
+.kumi-monitoring-row:last-child {
+  border-bottom: 0;
+}
+
+.kumi-monitoring-row > span {
+  text-align: center;
+
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.kumi-name {
+  color: #0f172a;
+}
+
+.kumi-pass {
+  color: #059669;
+}
+
+.kumi-pending {
+  color: #d97706;
+}
+
+.kumi-ng {
+  color: #dc2626;
+}
+
+.kumi-progress-cell {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+}
+
+.kumi-progress {
+  flex: 1;
+
+  height: 8px;
+
+  overflow: hidden;
+
+  border-radius: 999px;
+
+  background: #e2e8f0;
+}
+
+.kumi-progress-value {
+  height: 100%;
+
+  border-radius: inherit;
+
+  background: #176c8c;
+}
+
+.kumi-progress-value.complete {
+  background: #059669;
+}
+
+.kumi-progress-cell strong {
+  min-width: 36px;
+
+  font-size: 11px;
+  text-align: right;
+
+  color: #0f172a;
+}
+
+
+.kumi-mobile-label,
+.kumi-mobile-percent {
+  display: none;
+}
+
+.kumi-metric {
+  text-align: center;
+
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.kumi-metric > strong {
+  font-size: 13px;
+}
+
+/* ========================================
+   KUMI MONITORING - MOBILE CARDS
+======================================== */
+
+@media (max-width: 700px) {
+
+  .kumi-monitoring-panel {
+    padding: 14px;
+
+    border-radius: 15px;
+  }
+
+
+  .kumi-monitoring-heading {
+    flex-direction: column;
+
+    gap: 10px;
+  }
+
+
+  .kumi-monitoring-legend {
+    width: 100%;
+
+    flex-wrap: wrap;
+  }
+
+
+  .kumi-monitoring-header {
+    display: none;
+  }
+
+
+  .kumi-monitoring-table {
+    display: grid;
+
+    gap: 10px;
+
+    overflow: visible;
+
+    border: 0;
+    border-radius: 0;
+
+    background: transparent;
+  }
+
+
+  .kumi-monitoring-row {
+    display: grid;
+
+    grid-template-columns:
+      repeat(6, 1fr);
+
+    gap: 12px 8px;
+
+    min-height: 0;
+
+    padding: 15px;
+
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+
+    background: #ffffff;
+
+    box-shadow:
+      0 4px 12px
+      rgba(15, 23, 42, 0.05);
+  }
+
+
+  .kumi-name {
+    grid-column: 1 / 5;
+
+    display: flex;
+    align-items: center;
+
+    min-width: 0;
+
+    font-size: 15px;
+    font-weight: 800;
+
+    color: #0f172a;
+  }
+
+
+  .kumi-mobile-percent {
+    grid-column: 5 / 7;
+
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    font-size: 18px;
+    font-weight: 800;
+
+    color: #176c8c;
+  }
+
+
+  .kumi-metric {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    gap: 3px;
+
+    min-width: 0;
+
+    padding: 9px 4px;
+
+    border-radius: 10px;
+
+    background: #f8fafc;
+  }
+
+
+  .kumi-metric:nth-of-type(2) {
+    grid-column: span 3;
+  }
+
+
+  .kumi-metric:nth-of-type(3) {
+    grid-column: span 3;
+  }
+
+
+  .kumi-metric:nth-of-type(4),
+  .kumi-metric:nth-of-type(5),
+  .kumi-metric:nth-of-type(6) {
+    grid-column: span 2;
+  }
+
+
+  .kumi-mobile-label {
+    display: block;
+
+    font-size: 9px;
+    font-weight: 800;
+
+    letter-spacing: 0.04em;
+
+    color: #94a3b8;
+  }
+
+
+  .kumi-metric > strong {
+    font-size: 17px;
+    font-weight: 800;
+
+    color: #0f172a;
+  }
+
+
+  .kumi-metric.kumi-pass {
+    background: #ecfdf5;
+  }
+
+
+  .kumi-metric.kumi-pass
+  .kumi-mobile-label {
+    color: #047857;
+  }
+
+
+  .kumi-metric.kumi-pass
+  > strong {
+    color: #059669;
+  }
+
+
+  .kumi-metric.kumi-pending {
+    background: #fffbeb;
+  }
+
+
+  .kumi-metric.kumi-pending
+  .kumi-mobile-label {
+    color: #92400e;
+  }
+
+
+  .kumi-metric.kumi-pending
+  > strong {
+    color: #d97706;
+  }
+
+
+  .kumi-metric.kumi-ng {
+    background: #fef2f2;
+  }
+
+
+  .kumi-metric.kumi-ng
+  .kumi-mobile-label {
+    color: #b91c1c;
+  }
+
+
+  .kumi-metric.kumi-ng
+  > strong {
+    color: #dc2626;
+  }
+
+
+  .kumi-progress-cell {
+    grid-column: 1 / -1;
+
+    display: flex;
+    align-items: center;
+
+    gap: 9px;
+
+    width: 100%;
+
+    margin-top: 2px;
+  }
+
+
+  .kumi-progress {
+    flex: 1;
+
+    height: 9px;
+  }
+
+
+  .kumi-progress-cell > strong {
+    min-width: 38px;
+
+    font-size: 11px;
+    font-weight: 800;
+
+    text-align: right;
+
+    color: #0f172a;
+  }
+
+}
