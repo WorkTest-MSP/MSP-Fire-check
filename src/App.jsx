@@ -128,6 +128,8 @@ export default function App() {
   const [selected, setSelected] = useState(null);
   const [selectedHistory,setSelectedHistory] = useState(null);
   const [duplicateInspection,setDuplicateInspection] = useState(null);
+  const [directQrItem,setDirectQrItem] = useState(null);
+  const [directQrProcessed,setDirectQrProcessed] = useState(false);
   const [historySearch,setHistorySearch] = useState("");
   const [historyFilter,setHistoryFilter] = useState("ALL");
   const [historyFrom,setHistoryFrom] = useState("");
@@ -1945,7 +1947,93 @@ function escapeCsvValue(value) {
     url
   );
 }
+   //DIRECT QR CODE
+  function openDirectQrResult(code) {
+  const normalizedCode =
+    String(code || "")
+      .trim()
+      .toUpperCase();
+
+  if (!normalizedCode) {
+    return;
+  }
+
+  const item =
+    items.find(
+      (row) =>
+        String(row.code || "")
+          .trim()
+          .toUpperCase() ===
+        normalizedCode
+    );
+
+  if (!item) {
+    setDirectQrItem({
+      code: normalizedCode,
+      item: null,
+      log: null,
+      status: "NOT_FOUND",
+    });
+
+    setPage("directQrResult");
+
+    return;
+  }
+
+  const latest =
+    getLatestWeeklyInspection(
+      normalizedCode
+    );
+
+  const status =
+    latest?.result ||
+    "PENDING";
+
+  setDirectQrItem({
+    code: normalizedCode,
+    item,
+    log: latest,
+    status,
+  });
+
+  setPage("directQrResult");
+}
   
+function extractExtinguisherCode(
+  value
+) {
+  const raw =
+    String(value || "")
+      .trim();
+
+  if (!raw) {
+    return "";
+  }
+
+  try {
+    const parsedUrl =
+      new URL(raw);
+
+    const code =
+      parsedUrl.searchParams.get(
+        "code"
+      );
+
+    if (code) {
+      return String(code)
+        .trim()
+        .toUpperCase();
+    }
+
+  } catch {
+    // ไม่ใช่ URL
+  }
+
+  return raw
+    .trim()
+    .toUpperCase();
+}
+
   
   function findExtinguisher(value) {
   if (!value) {
@@ -1956,9 +2044,7 @@ function escapeCsvValue(value) {
   }
 
   const code =
-    String(value)
-      .trim()
-      .toUpperCase();
+  extractExtinguisherCode(value);
 
   const item =
     items.find(
@@ -2236,6 +2322,41 @@ function cancelRepeatInspection() {
 useEffect(() => {
   loadOnlineData();
 }, []);
+
+  useEffect(() => {
+  if (
+    loading ||
+    directQrProcessed
+  ) {
+    return;
+  }
+
+  const params =
+    new URLSearchParams(
+      window.location.search
+    );
+
+  const code =
+    params.get("code");
+
+  if (!code) {
+    setDirectQrProcessed(true);
+    return;
+  }
+
+  if (items.length === 0) {
+    return;
+  }
+
+  setDirectQrProcessed(true);
+
+  openDirectQrResult(code);
+
+}, [
+  loading,
+  items,
+  directQrProcessed,
+]);
 
   useEffect(() => {
     return () => {
@@ -3624,6 +3745,291 @@ useEffect(() => {
   </section>
 )}
 
+  {page === "directQrResult" &&
+  directQrItem && (
+  <section className="direct-qr-page">
+
+    {directQrItem.status ===
+    "NOT_FOUND" ? (
+
+      <div className="direct-qr-not-found">
+
+        <TriangleAlert size={48} />
+
+        <h1>
+          ไม่พบข้อมูลถังดับเพลิง
+        </h1>
+
+        <p>
+          รหัส {directQrItem.code}
+          ไม่พบในทะเบียน
+        </p>
+
+        <button
+          className="secondary-button"
+          onClick={() =>
+            setPage("home")
+          }
+        >
+          กลับหน้าหลัก
+        </button>
+
+      </div>
+
+    ) : (
+
+      <>
+        <div className="direct-qr-heading">
+
+          <div>
+            <span>
+              FIRE EXTINGUISHER
+            </span>
+
+            <h1>
+              {directQrItem.item.code}
+            </h1>
+          </div>
+
+          <StatusBadge
+            status={
+              directQrItem.status
+            }
+          />
+
+        </div>
+
+
+        <div className="direct-qr-equipment">
+
+          <div className="result-detail-row">
+            <span>Type</span>
+
+            <strong>
+              {directQrItem.item.type ||
+                "-"}
+            </strong>
+          </div>
+
+
+          <div className="result-detail-row">
+            <span>Size</span>
+
+            <strong>
+              {directQrItem.item.size ||
+                "-"}
+            </strong>
+          </div>
+
+
+          <div className="result-detail-row">
+            <span>Area</span>
+
+            <strong>
+              {directQrItem.item.area ||
+                "-"}
+            </strong>
+          </div>
+
+
+          <div className="result-detail-row">
+            <span>จุดติดตั้ง</span>
+
+            <strong>
+              {directQrItem.item.location ||
+                "-"}
+            </strong>
+          </div>
+
+
+          <div className="result-detail-row">
+            <span>KUMI</span>
+
+            <strong>
+              {directQrItem.item.kumi ||
+                "-"}
+            </strong>
+          </div>
+
+
+          <div className="result-detail-row">
+            <span>ผู้รับผิดชอบ</span>
+
+            <strong>
+              {directQrItem.item.responsible ||
+                "-"}
+            </strong>
+          </div>
+
+        </div>
+
+
+        {directQrItem.status ===
+        "PENDING" ? (
+
+          <div className="direct-qr-pending">
+
+            <div className="direct-status-message pending">
+
+              <QrCode size={34} />
+
+              <div>
+                <strong>
+                  ยังไม่ได้ตรวจในสัปดาห์นี้
+                </strong>
+
+                <span>
+                  กรุณาดำเนินการตรวจตามรอบ
+                </span>
+              </div>
+
+            </div>
+
+
+            <button
+              className="primary-button"
+              onClick={() =>
+                openInspection(
+                  directQrItem.item
+                )
+              }
+            >
+              เริ่มตรวจ
+            </button>
+
+          </div>
+
+        ) : (
+
+          <div className="direct-qr-completed">
+
+            <div
+              className={
+                directQrItem.status ===
+                "PASS"
+                  ? "direct-status-message pass"
+                  : "direct-status-message ng"
+              }
+            >
+
+              {directQrItem.status ===
+              "PASS" ? (
+                <CheckCircle2
+                  size={34}
+                />
+              ) : (
+                <TriangleAlert
+                  size={34}
+                />
+              )}
+
+
+              <div>
+
+                <strong>
+                  ตรวจแล้วในสัปดาห์นี้
+                </strong>
+
+                <span>
+                  ผลล่าสุด:{" "}
+                  {
+                    directQrItem
+                      .status
+                  }
+                </span>
+
+              </div>
+
+            </div>
+
+
+            <div className="direct-qr-last-result">
+
+              <div className="result-detail-row">
+                <span>
+                  ผู้ตรวจล่าสุด
+                </span>
+
+                <strong>
+                  {directQrItem
+                    .log?.inspector ||
+                    "-"}
+                </strong>
+              </div>
+
+
+              <div className="result-detail-row">
+                <span>
+                  วันที่และเวลา
+                </span>
+
+                <strong>
+                  {directQrItem
+                    .log?.inspectedAt
+                    ? new Date(
+                        directQrItem
+                          .log
+                          .inspectedAt
+                      ).toLocaleString(
+                        "th-TH"
+                      )
+                    : "-"}
+                </strong>
+              </div>
+
+
+              {directQrItem
+                .log?.note && (
+
+                <div className="result-note">
+
+                  <span>
+                    หมายเหตุ
+                  </span>
+
+                  <p>
+                    {
+                      directQrItem
+                        .log.note
+                    }
+                  </p>
+
+                </div>
+
+              )}
+
+            </div>
+
+
+            <button
+              className="secondary-button"
+              onClick={() => {
+                setDuplicateInspection({
+                  item:
+                    directQrItem.item,
+
+                  log:
+                    directQrItem.log,
+                });
+
+                setPage(
+                  "inspectionResult"
+                );
+              }}
+            >
+              ดูผลการตรวจ / ตรวจซ้ำ
+            </button>
+
+          </div>
+
+        )}
+
+      </>
+    )}
+
+  </section>
+)}
+        
         {page === "inspectionResult" &&
   duplicateInspection && (
   <section className="inspection-result-page">
@@ -4518,6 +4924,7 @@ useEffect(() => {
       {![
           "inspection",
           "inspectionResult",
+          "directQrResult",
           "historyDetail",
           "success",
           "replacementComplete",
