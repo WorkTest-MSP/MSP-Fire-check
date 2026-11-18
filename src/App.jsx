@@ -58,6 +58,13 @@ const TYPE_TO_CHECKLIST = {
   "F-500": "STANDARD",
   "CO2": "CO2",
 };
+const KUMI_GROUPS = [
+  "Receiving",
+  "Packing FLP",
+  "Packing SET",
+  "Vanning",
+  "Safety team",
+];
 function getChecklistForType(type) {
   const normalizedType = String(type || "")
     .trim()
@@ -476,6 +483,65 @@ const weeklyCompletion =
         ) * 100
       )
     : 0;
+  const kumiMonitoring =
+  KUMI_GROUPS.map((kumi) => {
+
+    const kumiItems =
+      activeItems.filter(
+        (item) =>
+          String(item.kumi || "")
+            .trim()
+            .toLowerCase() ===
+          kumi.toLowerCase()
+      );
+
+    const total =
+      kumiItems.length;
+
+    const pass =
+      kumiItems.filter(
+        (item) =>
+          getWeeklyCheckStatus(
+            item.code
+          ) === "PASS"
+      ).length;
+
+    const ng =
+      kumiItems.filter(
+        (item) =>
+          getWeeklyCheckStatus(
+            item.code
+          ) === "NG"
+      ).length;
+
+    const pending =
+      kumiItems.filter(
+        (item) =>
+          getWeeklyCheckStatus(
+            item.code
+          ) === "PENDING"
+      ).length;
+
+    const checked =
+      pass + ng;
+
+    const progress =
+      total > 0
+        ? Math.round(
+            (checked / total) * 100
+          )
+        : 0;
+
+    return {
+      kumi,
+      total,
+      checked,
+      pass,
+      pending,
+      ng,
+      progress,
+    };
+  });
   
   const filteredItems =
   useMemo(() => {
@@ -2597,6 +2663,116 @@ useEffect(() => {
       </span>
     </button>
 
+    <section className="kumi-monitoring-panel">
+
+  <div className="kumi-monitoring-heading">
+    <div>
+      <strong>
+        Weekly Result Monitoring by KUMI
+      </strong>
+
+      <span>
+        สถานะการตรวจประจำสัปดาห์
+      </span>
+    </div>
+
+    <div className="kumi-monitoring-legend">
+      <span className="legend-pass">
+        PASS
+      </span>
+
+      <span className="legend-pending">
+        PENDING
+      </span>
+
+      <span className="legend-ng">
+        NG
+      </span>
+    </div>
+  </div>
+
+
+  <div className="kumi-monitoring-table">
+
+    <div className="kumi-monitoring-header">
+      <span>KUMI</span>
+      <span>TOTAL</span>
+      <span>CHECKED</span>
+      <span>PASS</span>
+      <span>PENDING</span>
+      <span>NG</span>
+      <span>PROGRESS</span>
+    </div>
+
+
+    {kumiMonitoring.map(
+      (group) => (
+
+      <div
+        className="kumi-monitoring-row"
+        key={group.kumi}
+      >
+
+        <strong className="kumi-name">
+          {group.kumi}
+        </strong>
+
+
+        <span>
+          {group.total}
+        </span>
+
+
+        <span>
+          {group.checked}
+        </span>
+
+
+        <span className="kumi-pass">
+          {group.pass}
+        </span>
+
+
+        <span className="kumi-pending">
+          {group.pending}
+        </span>
+
+
+        <span className="kumi-ng">
+          {group.ng}
+        </span>
+
+
+        <div className="kumi-progress-cell">
+
+          <div className="kumi-progress">
+            <div
+              className={
+                group.progress === 100
+                  ? "kumi-progress-value complete"
+                  : "kumi-progress-value"
+              }
+              style={{
+                width:
+                  `${group.progress}%`,
+              }}
+            />
+          </div>
+
+          <strong>
+            {group.progress}%
+          </strong>
+
+        </div>
+
+      </div>
+
+    ))}
+
+  </div>
+
+</section>
+    
     <section className="expiry-dashboard-panel">
       <div className="expiry-dashboard-title">
         <strong>
