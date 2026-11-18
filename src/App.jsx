@@ -2276,6 +2276,7 @@ function cancelRepeatInspection() {
   setSyncMessage(
     "กำลังบันทึกผลการตรวจ..."
   );
+    setSaving(true);
 
   try {
     const response = await fetch(
@@ -2334,7 +2335,9 @@ function cancelRepeatInspection() {
     alert(
       "ไม่สามารถบันทึกผลลง Google Sheets ได้ กรุณาตรวจสอบอินเทอร์เน็ตและ Apps Script API"
     );
-  }
+  } finally {
+  setSaving(false);
+}
 }
   
 useEffect(() => {
@@ -4401,12 +4404,15 @@ useEffect(() => {
               />
             </section>
 
-            <button
-              className="primary-button save-button"
-              onClick={submitInspection}
-            >
-              บันทึกผลการตรวจ
-            </button>
+           <button
+               className="primary-button save-button"
+               onClick={submitInspection}
+               disabled={saving}
+           >
+               {saving
+                  ? "กำลังบันทึก..."
+                  : "บันทึกผลการตรวจ"}
+           </button>
           </section>
         )}
 
