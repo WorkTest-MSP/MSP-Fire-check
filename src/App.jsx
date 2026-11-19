@@ -478,7 +478,17 @@ const weeklyCompletion =
         ) * 100
       )
     : 0;
-  const kumiGroups =
+  const preferredKumiOrder = [
+  "Receiving",
+  "Packing FLP",
+  "Packing SET",
+  "Vanning",
+  "SPO/CPO",
+  "Safety team",
+];
+
+
+const kumiGroups =
   Array.from(
     new Set(
       activeItems
@@ -490,15 +500,49 @@ const weeklyCompletion =
         .filter(Boolean)
     )
   )
-  .sort((a, b) =>
-    a.localeCompare(
+  .sort((a, b) => {
+
+    const aIndex =
+      preferredKumiOrder.findIndex(
+        (name) =>
+          name.toLowerCase() ===
+          a.toLowerCase()
+      );
+
+    const bIndex =
+      preferredKumiOrder.findIndex(
+        (name) =>
+          name.toLowerCase() ===
+          b.toLowerCase()
+      );
+
+
+    if (
+      aIndex !== -1 &&
+      bIndex !== -1
+    ) {
+      return aIndex - bIndex;
+    }
+
+
+    if (aIndex !== -1) {
+      return -1;
+    }
+
+
+    if (bIndex !== -1) {
+      return 1;
+    }
+
+
+    return a.localeCompare(
       b,
       undefined,
       {
         sensitivity: "base",
       }
-    )
-  );
+    );
+  });
 
 
 const kumiMonitoring =
