@@ -58,13 +58,8 @@ const TYPE_TO_CHECKLIST = {
   "F-500": "STANDARD",
   "CO2": "CO2",
 };
-const KUMI_GROUPS = [
-  "Receiving",
-  "Packing FLP",
-  "Packing SET",
-  "Vanning",
-  "Safety team",
-];
+
+
 function getChecklistForType(type) {
   const normalizedType = String(type || "")
     .trim()
@@ -483,13 +478,38 @@ const weeklyCompletion =
         ) * 100
       )
     : 0;
-  const kumiMonitoring =
-  KUMI_GROUPS.map((kumi) => {
+  const kumiGroups =
+  Array.from(
+    new Set(
+      activeItems
+        .map((item) =>
+          String(
+            item.kumi || ""
+          ).trim()
+        )
+        .filter(Boolean)
+    )
+  )
+  .sort((a, b) =>
+    a.localeCompare(
+      b,
+      undefined,
+      {
+        sensitivity: "base",
+      }
+    )
+  );
+
+
+const kumiMonitoring =
+  kumiGroups.map((kumi) => {
 
     const kumiItems =
       activeItems.filter(
         (item) =>
-          String(item.kumi || "")
+          String(
+            item.kumi || ""
+          )
             .trim()
             .toLowerCase() ===
           kumi.toLowerCase()
@@ -528,7 +548,10 @@ const weeklyCompletion =
     const progress =
       total > 0
         ? Math.round(
-            (checked / total) * 100
+            (
+              checked /
+              total
+            ) * 100
           )
         : 0;
 
