@@ -746,6 +746,55 @@ const filteredHistory =
     historyFrom,
     historyTo,
   ]);
+
+  const historyDeleteCount =
+  useMemo(() => {
+
+    if (
+      !historyFrom ||
+      !historyTo
+    ) {
+      return 0;
+    }
+
+    const fromDate =
+      new Date(
+        `${historyFrom}T00:00:00`
+      );
+
+    const toDate =
+      new Date(
+        `${historyTo}T23:59:59.999`
+      );
+
+    return logs.filter(
+      (log) => {
+
+        if (
+          !log.inspectedAt
+        ) {
+          return false;
+        }
+
+        const inspectedDate =
+          new Date(
+            log.inspectedAt
+          );
+
+        return (
+          inspectedDate >=
+            fromDate &&
+          inspectedDate <=
+            toDate
+        );
+      }
+    ).length;
+
+  }, [
+    logs,
+    historyFrom,
+    historyTo,
+  ]);
   
 function mapExtinguisher(row) {
   const code = String(
@@ -1924,6 +1973,25 @@ function openHistoryDetail(
   );
 }
 
+function isCurrentWeekInDeleteRange() {
+  if (
+    !historyFrom ||
+    !historyTo
+  ) {
+    return false;
+  }
+
+  const toDate =
+    new Date(
+      `${historyTo}T23:59:59.999`
+    );
+
+  return (
+    toDate >=
+    getWeekStart()
+  );
+}
+  
 function escapeCsvValue(value) {
   const text =
     String(
@@ -1943,6 +2011,8 @@ function escapeCsvValue(value) {
     alert(
       "ไม่มีข้อมูลประวัติสำหรับ Download"
     );
+
+  
 
     return;
   }
@@ -1976,6 +2046,7 @@ function escapeCsvValue(value) {
 
         const dateText =
           inspectedDate
+        
             .toLocaleDateString(
               "en-GB"
             );
@@ -2098,6 +2169,187 @@ function escapeCsvValue(value) {
     url
   );
 }
+
+  async function deleteHistoryByDateRange() {
+  if (
+    !historyFrom ||
+    !historyTo
+  ) {
+    alert(
+      "กรุณาระบุ From และ To ก่อนลบประวัติ"
+    );
+
+    return;
+  }
+
+
+  const fromDate =
+    new Date(
+      `${historyFrom}T00:00:00`
+    );
+
+  const toDate =
+    new Date(
+      `${historyTo}T23:59:59.999`
+    );
+
+
+  if (
+    fromDate > toDate
+  ) {
+    alert(
+      "วันที่ From ต้องไม่อยู่หลัง To"
+    );
+
+    return;
+  }
+
+
+  if (
+    isCurrentWeekInDeleteRange()
+  ) {
+    alert(
+      "ไม่สามารถลบประวัติของสัปดาห์ปัจจุบันได้"
+    );
+
+    return;
+  }
+
+
+  if (
+    historyDeleteCount === 0
+  ) {
+    alert(
+      "ไม่พบประวัติในช่วงวันที่ที่เลือก"
+    );
+
+    return;
+  }
+
+
+  const confirmed =
+    window.confirm(
+      `ยืนยันลบประวัติการตรวจ?\n\n` +
+      `From: ${historyFrom}\n` +
+      `To: ${historyTo}\n` +
+      `จำนวน: ${historyDeleteCount} รายการ\n\n` +
+      `แนะนำให้ Download CSV สำรองก่อนลบ\n\n` +
+      `การดำเนินการนี้ไม่สามารถ Undo ได้`
+    );
+
+
+  if (!confirmed) {
+    return;
+  }
+
+
+  const finalConfirm =
+    window.confirm(
+      `ยืนยันอีกครั้ง\n\n` +
+      `ต้องการลบ ${historyDeleteCount} รายการจริงหรือไม่?`
+    );
+
+
+  if (!finalConfirm) {
+    return;
+  }
+
+
+  setSaving(true);
+
+  setSyncMessage(
+    "กำลังลบประวัติการตรวจ..."
+  );
+
+
+  try {
+    const response =
+      await fetch(
+        API_URL,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "text/plain;charset=utf-8",
+          },
+
+          body:
+            JSON.stringify({
+              action:
+                "deleteInspectionHistory",
+
+              fromDate:
+                historyFrom,
+
+              toDate:
+                historyTo,
+            }),
+        }
+      );
+
+
+    if (!response.ok) {
+      throw new Error(
+        `HTTP error: ${response.status}`
+      );
+    }
+
+
+    const data =
+      await response.json();
+
+
+    if (!data.success) {
+      throw new Error(
+        data.message ||
+        "Delete history failed"
+      );
+    }
+
+
+    await loadOnlineData();
+
+
+    setHistoryFrom("");
+    setHistoryTo("");
+    setHistorySearch("");
+    setHistoryFilter("ALL");
+
+
+    setSyncMessage(
+      `ลบประวัติ ${data.deletedCount} รายการเรียบร้อย`
+    );
+
+
+    alert(
+      `ลบประวัติเรียบร้อย\n\n${data.deletedCount} รายการ`
+    );
+
+
+  } catch (error) {
+    console.error(
+      "Delete history error:",
+      error
+    );
+
+
+    setSyncMessage(
+      "ลบประวัติไม่สำเร็จ"
+    );
+
+
+    alert(
+      error.message ||
+      "ไม่สามารถลบประวัติได้"
+    );
+
+
+  } finally {
+    setSaving(false);
+  }
+}
+  
    //DIRECT QR CODE
   function openDirectQrResult(code) {
   const normalizedCode =
@@ -4892,22 +5144,79 @@ useEffect(() => {
     แสดง {filteredHistory.length} รายการ
   </div>
 
-  <button
-    type="button"
-    className="history-download-button"
-    onClick={
-      downloadHistoryCsv
-    }
-    disabled={
-      filteredHistory.length === 0
-    }
-  >
-    <Download size={18} />
 
-    Download CSV
-  </button>
+  <div className="history-export-actions">
+
+    <button
+      type="button"
+      className="history-download-button"
+      onClick={
+        downloadHistoryCsv
+      }
+      disabled={
+        filteredHistory.length === 0
+      }
+    >
+      <Download size={18} />
+
+      Download CSV
+    </button>
+
+
+    {historyFrom &&
+      historyTo && (
+
+      <button
+        type="button"
+        className="history-clear-button"
+        onClick={
+          deleteHistoryByDateRange
+        }
+        disabled={
+          saving ||
+          historyDeleteCount === 0 ||
+          isCurrentWeekInDeleteRange()
+        }
+      >
+        <XCircle size={18} />
+
+        Clear History
+      </button>
+
+    )}
+
+  </div>
 
 </div>
+
+    {histor*From &&
+  historyTo && (
+
+  <div
+      className={
+      isCurrentWeekI*DeleteRange()
+        ? "history-delete-preview blocked"
+        : "history-delete-preview"
+    }
+  >
+
+  {isCurrentWeekInDeleteRange()
+    ? (
+        <>
+          ไม่อนุญาตให้ลบประวัติของสัปดาห์ปัจจุบัน
+     </>
+      )
+      : (
+       <>
+          ช่วงวันที่นี้มี{" "}         <strong>
+            {historyDeleteCount}
+          </strong>{" "}
+          รายการที่สามารถลบได้
+        </>
+      )}
+
+  </div>
+)}
 
     
     {filteredHistory.length ===
