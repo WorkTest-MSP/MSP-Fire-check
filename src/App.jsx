@@ -3726,7 +3726,7 @@ useEffect(() => {
 
     <section className="form-card">
       <label>
-        รหัสถังใหม่ *
+        รหัสถังใหม่
       </label>
 
       <input
@@ -3781,7 +3781,8 @@ useEffect(() => {
 
     <section className="form-card">
       <label>
-        Size
+        Size *
+      
       </label>
 
       <input
@@ -5189,12 +5190,12 @@ useEffect(() => {
 
 </div>
 
-    {histor*From &&
+    {historFrom &&
   historyTo && (
 
   <div
       className={
-      isCurrentWeekI*DeleteRange()
+      isCurrentWeekIDeleteRange()
         ? "history-delete-preview blocked"
         : "history-delete-preview"
     }
