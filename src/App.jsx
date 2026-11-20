@@ -2473,7 +2473,7 @@ function extractExtinguisherCode(value) {
 
   if (!item) {
     alert(
-      `ไม่พบรหัส ${code} || "UNKNOWN"} ในทะเบียนถังดับเพลิง`
+      `ไม่พบรหัส ${code || "UNKNOWN"} ในทะเบียนถังดับเพลิง`
     );
 
     return;
@@ -5190,12 +5190,12 @@ useEffect(() => {
 
 </div>
 
-    {historFrom &&
+    {historyFrom &&
   historyTo && (
 
   <div
       className={
-      isCurrentWeekIDeleteRange()
+      isCurrentWeekInDeleteRange()
         ? "history-delete-preview blocked"
         : "history-delete-preview"
     }
