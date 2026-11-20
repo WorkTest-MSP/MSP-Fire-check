@@ -3389,3 +3389,66 @@ textarea:focus {
   }
 
 }
+
+.history-export-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.history-clear-button {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px 16px;
+  border: 1px solid #dc2626;
+  border-radius: 11px;
+  font-size: 12px;
+  font-weight: 700;
+  color: white;
+  background: #dc2626;
+}
+
+.history-clear-button:hover {
+  background: #b91c1c;
+}
+
+.history-clear-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.history-delete-preview {
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border: 1px solid #fed7aa;
+  border-radius: 10px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #9a3412;
+  background: #fff7ed;
+}
+
+.history-delete-preview.blocked {
+  border-color: #fecaca;
+  color: #b91c1c;
+  background: #fef2f2;
+}
+
+@media (max-width: 700px) {
+  .history-export-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .history-clear-button,
+  .history-download-button {
+    width: 100%;
+  }
+}
+
+
